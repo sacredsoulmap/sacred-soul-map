@@ -454,7 +454,7 @@ async function generateReading(formData){
   const res=await fetch("/api/reading",{
     method:"POST",
     headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:5000,messages:[{role:"user",content:prompt}]})
+    body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:8000,messages:[{role:"user",content:prompt}]})
   });
   const data=await res.json();
   const text=data.content?.[0]?.text||"";
