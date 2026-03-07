@@ -668,9 +668,7 @@ Return ONLY a valid JSON object — no markdown, no backticks, no explanation. U
     "capstone": "2-3 sentences on the Capstone letter (${n.capstone?.char||'N/A'}) — how ${name} finishes what they start and how they wrap up life chapters",
     "firstVowel": "2-3 sentences on the First Vowel (${n.firstVowel?.char||'N/A'}) — the hidden inner drive that pulses beneath everything",
     "lifeCycles": "3-4 sentences weaving all three Life Cycles (${n.lifeCycles?.first?.number}, ${n.lifeCycles?.second?.number}, ${n.lifeCycles?.third?.number}) into the arc of ${name}'s three great life periods. Which cycle are they in now and what does it ask?",
-    "isolatedNumbers": "${n.isolatedNums?.length?
-      'ISOLATED NUMBERS: '+n.isolatedNums.join(', ')+'. For EACH isolated number provide: (1) what this energy represents that feels hard to access for '+name+', (2) the specific Philips remedy — which neighboring numbers to develop and why, (3) 2-3 concrete integration practices, (4) what becomes available when integrated. Use the specific remedy data provided in the prompt.'
-      :'null'}","Numbers "${n.isolatedNums?.join(', ')}" are present in the combined grid but have no filled neighbors — talents and traits that exist but feel disconnected. Write 2-3 sentences on what it means for ${name} to have these isolated energies and how they might access them more consciously.":"null"}",
+    "isolatedNumbers": "${n.isolatedNums?.length?('ISOLATED NUMBERS: '+n.isolatedNums.join(', ')+'. For EACH isolated number: (1) what this energy represents that feels hard to access, (2) the Philips remedy — which neighboring numbers to develop and why, (3) 2-3 concrete integration practices, (4) what becomes available when integrated.'):'null'}",
     "activeTiming": "Write 4-5 sentences on the precise current moment: ${name} is in Pinnacle ${n.activePinnacleNum} (${n.activePinnacle}), their active challenge is ${n.activeChallenge}, Personal Year ${n.personalYear} in the ${n.pyPhase}. What specific convergence is happening RIGHT NOW at the intersection of these three timing layers? What is being asked, what is completing, what new door is opening?",
     "intensityNumbers": "2-3 sentences on the intensity numbers (${n.intensityNums.map(x=>x.num).join(",")}) and what their high frequency in the name chart means for personality and drive",
     "pinnacles": "4-5 sentences weaving all four pinnacles (${n.pinnacles.join(",")}) into a narrative arc of ${name}'s life chapters. Which pinnacle are they in now? What does it ask of them?",
@@ -1628,7 +1626,7 @@ export default function App(){
               </div>
             </div>
             <div style={{textAlign:"center"}}>
-              <button onClick={submit} disabled={!legalConsent} style={{opacity:legalConsent?1:.4,cursor:legalConsent?"pointer":"not-allowed",...{}}}{{background:`linear-gradient(135deg,${tier.color}22,${tier.color}40)`,border:`1px solid ${tier.color}`,color:tier.color,fontFamily:"'Cinzel',serif",fontSize:12,letterSpacing:".2em",textTransform:"uppercase",padding:"15px 46px",borderRadius:4,cursor:"pointer",transition:"all .3s"}}
+              <button onClick={submit} disabled={!legalConsent} style={{opacity:legalConsent?1:.4,cursor:legalConsent?"pointer":"not-allowed",background:`linear-gradient(135deg,${tier.color}22,${tier.color}40)`,border:`1px solid ${tier.color}`,color:tier.color,fontFamily:"'Cinzel',serif",fontSize:12,letterSpacing:".2em",textTransform:"uppercase",padding:"15px 46px",borderRadius:4,transition:"all .3s"}}
                 onMouseEnter={e=>{e.target.style.background=`linear-gradient(135deg,${tier.color}44,${tier.color}66)`;e.target.style.color="#fff";}}
                 onMouseLeave={e=>{e.target.style.background=`linear-gradient(135deg,${tier.color}22,${tier.color}40)`;e.target.style.color=tier.color;}}>
                 Generate My Reading →
