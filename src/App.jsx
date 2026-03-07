@@ -112,7 +112,8 @@ function calcAll(person){
   const curY=new Date().getFullYear();
 
   // Core numbers
-  const rawLP=reduce(+bMonth)+reduce(+bDay)+reduce(digitSum(bYear));
+  // Life Path — Philips: reduce each component to single digit FIRST, then sum
+  const rawLP=reduce(+bMonth,false)+reduce(+bDay,false)+reduce(digitSum(bYear),false);
   const lifePath=reduce(rawLP);
   const rawExpr=nameLetterSum(fullName);
   const expression=reduce(rawExpr);
@@ -124,7 +125,9 @@ function calcAll(person){
   const pyRaw=reduce(+bMonth)+reduce(+bDay)+reduce(digitSum(String(curY)));
   const personalYear=reduce(pyRaw);
   const maturity=reduce(lifePath+expression);
-  const balance=reduce(lv((f||"a")[0]));
+  // Balance Number = initials of full name (first letter of each name part) — Philips
+  const initials=[f,m,l].filter(Boolean).map(n=>n.toUpperCase().replace(/[^A-Z]/g,"")[0]).filter(Boolean);
+  const balance=reduce(initials.reduce((s,c)=>s+lv(c),0));
   const subconscious=reduce(nameLetterSum(fullName));
   
   // Subconscious self = 9 minus count of missing numbers
@@ -145,10 +148,34 @@ function calcAll(person){
   const ch3=Math.abs(ch1-ch2);
   const ch4=Math.abs(mRed-yRed);
 
-  // Pinnacle ages (based on LP)
-  const pin1End=36-lifePath;
+  // Pinnacle ages — use REDUCED LP (no master numbers) per Philips
+  const lpReduced=reduce(lifePath,false);
+  const pin1End=36-lpReduced;
   const pin2End=pin1End+9;
   const pin3End=pin2End+9;
+
+  // Cornerstone (first letter of first name) — approach to life & new beginnings
+  const firstClean=(f||"").toUpperCase().replace(/[^A-Z]/g,"");
+  const cornerstoneChar=firstClean[0]||"";
+  const cornerstone=cornerstoneChar?{char:cornerstoneChar,value:lv(cornerstoneChar)}:null;
+
+  // Capstone (last letter of first name) — ability to complete & follow through
+  const capstoneChar=firstClean[firstClean.length-1]||"";
+  const capstone=capstoneChar?{char:capstoneChar,value:lv(capstoneChar)}:null;
+
+  // First Vowel — the innermost urge, secret desire beneath all expression
+  const firstVowelChar=firstClean.split("").find(c=>VOWELS.has(c))||"";
+  const firstVowel=firstVowelChar?{char:firstVowelChar,value:lv(firstVowelChar)}:null;
+
+  // Three Life Cycles/Period Cycles (Philips) — 3 great life periods
+  // First Cycle = reduced birth month (birth through end of Pinnacle 1)
+  // Second Cycle = reduced birth day (Pinnacles 2 & 3)
+  // Third Cycle = reduced birth year (Pinnacle 4 onward)
+  const lifeCycles={
+    first:{number:mRed,span:"Birth — Age "+pin1End},
+    second:{number:dRed,span:"Age "+pin1End+" — Age "+pin3End},
+    third:{number:yRed,span:"Age "+pin3End+"+"},
+  };
 
   // Karmic debts — check raw values before reduction
   const karmicDebts=[];
@@ -208,6 +235,7 @@ function calcAll(person){
     birthArrows,combinedArrows,
     planes,intensityNums,
     curNameAnalysis,
+    cornerstone,capstone,firstVowel,lifeCycles,
   };
 }
 
@@ -215,7 +243,7 @@ function chineseZodiac(year){
   const A=["Rat","Ox","Tiger","Rabbit","Dragon","Snake","Horse","Goat","Monkey","Rooster","Dog","Pig"];
   const E=["Metal","Metal","Water","Water","Wood","Wood","Fire","Fire","Earth","Earth"];
   const P=["Yang","Yin","Yang","Yin","Yang","Yin","Yang","Yin","Yang","Yin","Yang","Yin"];
-  const y=+year, ai=((y-4)%12+12)%12, ei=((y-4)%10+10)%10;
+  const y=+year, ai=((y-4)%12+12)%12, ei=y%10;
   return{animal:A[ai],element:E[ei],polarity:P[ai]};
 }
 function sunSign(m,d){
@@ -241,7 +269,7 @@ function buildPrompt(formData){
   const arrowsBlock=`
 BIRTH DATE GRID (Lo Shu — birth date digits only):
   ${p.bMonth}/${p.bDay}/${p.bYear} → digits: ${dateDigits(p.bMonth,p.bDay,p.bYear).join(",")}
-  Grid counts: ${[9,6,3,8,5,2,7,4,1].map(n=>`${n}(${n.birthGrid||"·"})`)}
+  Grid counts [3 6 9 / 2 5 8 / 1 4 7]: ${[3,6,9,2,5,8,1,4,7].map(n=>`${n}×${n.birthGrid?.[n]||0}`).join(" ")}
   Arrows of STRENGTH from birth chart: ${n.birthArrows.strength.map(a=>`${a.label} ${a.s.name}`).join(" | ")||"None"}
   Arrows of WEAKNESS from birth chart: ${n.birthArrows.weakness.map(a=>`${a.label} ${a.w.name}`).join(" | ")||"None"}
 
@@ -336,6 +364,10 @@ CORE NUMEROLOGY (Pythagorean — David Philips):
   Subconscious Self: ${n.subconsciousSelf}
   Missing Numbers: ${n.missing.join(",")||"None — all nine energies present"}
   Intensity Numbers (most in name): ${n.intensityNums.map(x=>`${x.num}(×${x.count})`).join(", ")}
+  Cornerstone (1st letter of first name = ${n.cornerstone?.char||"N/A"}): value ${n.cornerstone?.value||"N/A"} — how they approach new beginnings
+  Capstone (last letter of first name = ${n.capstone?.char||"N/A"}): value ${n.capstone?.value||"N/A"} — how they complete things
+  First Vowel (${n.firstVowel?.char||"N/A"}): value ${n.firstVowel?.value||"N/A"} — the innermost secret desire
+  Life Cycles: 1st=${n.lifeCycles?.first?.number} (${n.lifeCycles?.first?.span}) | 2nd=${n.lifeCycles?.second?.number} (${n.lifeCycles?.second?.span}) | 3rd=${n.lifeCycles?.third?.number} (${n.lifeCycles?.third?.span})
   Pinnacles: ${n.pinnacles[0]} (birth–age${n.pinnacleAges[0]}) → ${n.pinnacles[1]} (age${n.pinnacleAges[0]}–${n.pinnacleAges[1]}) → ${n.pinnacles[2]} (age${n.pinnacleAges[1]}–${n.pinnacleAges[2]}) → ${n.pinnacles[3]} (age${n.pinnacleAges[2]}+)
   Challenges: ${n.challenges[0]}, ${n.challenges[1]}, ${n.challenges[2]} (main), ${n.challenges[3]}
   Karmic Debts: ${n.karmicDebts.length?n.karmicDebts.join(" | "):"None detected"}
@@ -347,7 +379,14 @@ ${isFull?planesBlock:""}
 
 ASTROLOGY:
   DOB: ${p.bMonth}/${p.bDay}/${p.bYear} | Time: ${p.bHour?(p.bHour+":"+(p.bMinute||"00")):"Unknown"} | Place: ${[p.bCity,p.bState,p.bCountry].filter(Boolean).join(", ")||"Not provided"}
-  Sun Sign: ${sun}
+  Sun Sign: ${p.natalSun||sun} ${p.natalSun&&p.natalSun!==sun?"(calculated: "+sun+")":""}
+  Moon Sign: ${p.natalMoon||"Not provided"}
+  Rising / Ascendant: ${p.natalRising||"Not provided — birth time needed"}
+  Mercury: ${p.natalMercury||"Not provided"} | Venus: ${p.natalVenus||"Not provided"} | Mars: ${p.natalMars||"Not provided"}
+  Jupiter: ${p.natalJupiter||"Not provided"} | Saturn: ${p.natalSaturn||"Not provided"} | Chiron: ${p.natalChiron||"Not provided"}
+  North Node: ${p.natalNorthNode||"Not provided"} | South Node: ${p.natalSouthNode||"Not provided"}
+  Key House Cusps: 1st=${p.natalHouse1||"?"} | 4th=${p.natalHouse4||"?"} | 7th=${p.natalHouse7||"?"} | 10th=${p.natalHouse10||"?"}
+  Major Aspects/Patterns: ${p.natalAspects||"Not provided"}
 
 CHINESE ZODIAC:
   ${cz.element} ${cz.animal} (${cz.polarity})
@@ -382,6 +421,10 @@ Return ONLY a valid JSON object — no markdown, no backticks, no explanation. U
     "balance": { "number": ${n.balance}, "reading": "3 sentences on how ${name} responds instinctively under stress and what helps them return to center" },
     "subconsciousSelf": { "number": ${n.subconsciousSelf}, "reading": "3 sentences on what they do naturally and automatically in crisis situations" },
     "missing": { "numbers": ${JSON.stringify(n.missing)}, "reading": "3-4 sentences on the karmic lessons these missing numbers represent — what they came to consciously develop. Be specific about each number." },
+    "cornerstone": "2-3 sentences on the Cornerstone letter (${n.cornerstone?.char||'N/A'}) — how ${name} starts new chapters and approaches beginnings",
+    "capstone": "2-3 sentences on the Capstone letter (${n.capstone?.char||'N/A'}) — how ${name} finishes what they start and how they wrap up life chapters",
+    "firstVowel": "2-3 sentences on the First Vowel (${n.firstVowel?.char||'N/A'}) — the hidden inner drive that pulses beneath everything",
+    "lifeCycles": "3-4 sentences weaving all three Life Cycles (${n.lifeCycles?.first?.number}, ${n.lifeCycles?.second?.number}, ${n.lifeCycles?.third?.number}) into the arc of ${name}'s three great life periods. Which cycle are they in now and what does it ask?",
     "intensityNumbers": "2-3 sentences on the intensity numbers (${n.intensityNums.map(x=>x.num).join(",")}) and what their high frequency in the name chart means for personality and drive",
     "pinnacles": "4-5 sentences weaving all four pinnacles (${n.pinnacles.join(",")}) into a narrative arc of ${name}'s life chapters. Which pinnacle are they in now? What does it ask of them?",
     "challenges": "3-4 sentences on the challenges (${n.challenges.join(",")}) as initiations — not obstacles but invitations to grow. What is the main challenge (${n.challenges[2]}) really asking for?",
@@ -407,9 +450,16 @@ Return ONLY a valid JSON object — no markdown, no backticks, no explanation. U
   },
 
   "astrology": {
-    "sunSign": "${sun}",
-    "sunReading": "4-5 sentences — how their ${sun} Sun interplays specifically with Life Path ${n.lifePath} and Expression ${n.expression}. Where do these energies amplify each other? Where do they create productive tension?",
-    "chartThemes": "3-4 sentences weaving birth location, season, time if known into the overall energy signature",
+    "sunSign": "${p.natalSun||sun}",
+    "moonSign": "${p.natalMoon||'Not provided'}",
+    "rising": "${p.natalRising||'Not provided'}",
+    "sunReading": "4-5 sentences — how their ${p.natalSun||sun} Sun interplays specifically with Life Path ${n.lifePath} and Expression ${n.expression}. Where do these energies amplify each other? Where do they create productive tension?",
+    "moonReading": "4-5 sentences on ${p.natalMoon||'the Moon placement'} — the emotional body, instinctive reactions, childhood conditioning, what the soul needs to feel safe. How does this Moon sign interact with the Life Path ${n.lifePath} and shadow themes? If Moon not provided, speak to the numerological emotional blueprint (Arrow of Emotion, planes of expression) instead.",
+    "risingReading": "${p.natalRising?'4-5 sentences on the '+p.natalRising+' Rising — the mask worn, the first impression given, the body's approach to life, and how this Ascendant shapes how the world experiences them vs. who they truly are inside (compared to Sun/Moon). Connect to Cornerstone and Personality Number '+n.personality+'.':'The Rising was not provided. Speak to what we can know from the Personality Number '+n.personality+' and Cornerstone instead.'}",
+    "northNodeReading": "${p.natalNorthNode?'3-4 sentences on the North Node in '+p.natalNorthNode+' — the soul's evolutionary direction, the spiritual assignment of this lifetime, the territory that feels uncomfortable but is exactly where growth lives. Cross-reference with Life Path '+n.lifePath+' and missing numbers '+JSON.stringify(n.missing)+'.':'North Node not provided — speak to evolutionary themes from LP and karmic debt context instead.'}",
+    "chironReading": "${p.natalChiron?'3-4 sentences on Chiron in '+p.natalChiron+' — the sacred wound and the healer's gift. Where does this person carry pain they haven't claimed as power yet? How does Chiron in this sign map to the shadow work themes and missing numbers?':'Chiron not provided — interpret the core wound from shadow data and missing numbers.'}",
+    "innerPlanets": "${[p.natalMercury,p.natalVenus,p.natalMars].some(Boolean)?'4-5 sentences weaving Mercury in '+p.natalMercury+', Venus in '+p.natalVenus+', Mars in '+p.natalMars+' into how this person thinks, loves, and acts. Cross-reference with Expression Number '+n.expression+', Soul Urge '+n.soulUrge+', and dominant arrows.':'Inner planets not provided — draw from Expression, Soul Urge, Personality and dominant plane instead.'}",
+    "chartThemes": "3-4 sentences weaving birth location, season, time if known into the overall energy signature. If Rising is known, describe the Ascendant ruler and its condition. Identify any stellia, dominant elements, or modal signatures visible from provided placements.",
     "currentSky": "3-4 sentences on what the current ${new Date().getFullYear()} astrological climate means for their Personal Year ${n.personalYear}"
   },
 
@@ -868,7 +918,9 @@ const ChakraPicker=({selected,onChange})=>(
   </div>
 );
 
-const emptyP=()=>({relationship:"",preferredName:"",legalFirst:"",legalMiddle:"",legalLast:"",currentFirst:"",currentLast:"",bMonth:"",bDay:"",bYear:"",timeKnown:"",bHour:"",bMinute:"",bCity:"",bState:"",bCountry:"",pronouns:"",shadowThemes:[],recurringPatterns:"",childhoodWound:"",shadowDepth:5,shadowGoal:"",meditationFocus:[],meditationExp:"",currentPractice:"",chakraFocus:[],freqInterest:[],binauralInterest:[],goals:""});
+const ZODIAC_SIGNS_O=[{v:"",l:"— Select —"},{v:"Aries",l:"♈ Aries"},{v:"Taurus",l:"♉ Taurus"},{v:"Gemini",l:"♊ Gemini"},{v:"Cancer",l:"♋ Cancer"},{v:"Leo",l:"♌ Leo"},{v:"Virgo",l:"♍ Virgo"},{v:"Libra",l:"♎ Libra"},{v:"Scorpio",l:"♏ Scorpio"},{v:"Sagittarius",l:"♐ Sagittarius"},{v:"Capricorn",l:"♑ Capricorn"},{v:"Aquarius",l:"♒ Aquarius"},{v:"Pisces",l:"♓ Pisces"}];
+
+const emptyP=()=>({relationship:"",preferredName:"",legalFirst:"",legalMiddle:"",legalLast:"",currentFirst:"",currentLast:"",bMonth:"",bDay:"",bYear:"",timeKnown:"",bHour:"",bMinute:"",bCity:"",bState:"",bCountry:"",pronouns:"",shadowThemes:[],recurringPatterns:"",childhoodWound:"",shadowDepth:5,shadowGoal:"",meditationFocus:[],meditationExp:"",currentPractice:"",chakraFocus:[],freqInterest:[],binauralInterest:[],goals:"",natalMoon:"",natalRising:"",natalMercury:"",natalVenus:"",natalMars:"",natalJupiter:"",natalSaturn:"",natalNorthNode:"",natalSouthNode:"",natalChiron:"",natalSun:"",natalHouse1:"",natalHouse4:"",natalHouse7:"",natalHouse10:"",natalAspects:"",natalSource:""});
 
 const PersonForm=({p,pi,upd,color,withFull})=>(
   <div style={{background:"rgba(255,255,255,.015)",border:`1px solid ${color}22`,borderRadius:9,padding:"22px 20px",marginBottom:18,position:"relative",overflow:"hidden"}}>
@@ -915,6 +967,39 @@ const PersonForm=({p,pi,upd,color,withFull})=>(
         <TI l="State" v={p.bState} s={v=>upd({bState:v})} p="TX"/>
         <TI l="Country" v={p.bCountry} s={v=>upd({bCountry:v})} p="USA" r/>
       </div>
+
+      <GD label="Natal Chart Placements — Optional but Powerful"/>
+      <div style={{background:"rgba(126,196,212,.04)",border:"1px solid rgba(126,196,212,.12)",borderRadius:4,padding:"9px 13px",marginBottom:12,fontSize:11,color:"rgba(255,255,255,.42)",fontStyle:"italic",lineHeight:1.8}}>
+        🌙 Get your free chart at <strong style={{color:"rgba(126,196,212,.7)"}}>astro.com</strong> → Extended Chart Selection. The more placements you provide, the deeper your reading. If you have a reading from Co-Star, TimePassages, or Cafe Astrology — use those too.
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
+        <TS l="Sun Sign" v={p.natalSun} s={v=>upd({natalSun:v})} opts={ZODIAC_SIGNS_O}/>
+        <TS l="Moon Sign" v={p.natalMoon} s={v=>upd({natalMoon:v})} opts={ZODIAC_SIGNS_O}/>
+        <TS l="Rising / Ascendant" v={p.natalRising} s={v=>upd({natalRising:v})} opts={ZODIAC_SIGNS_O}/>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
+        <TS l="Mercury" v={p.natalMercury} s={v=>upd({natalMercury:v})} opts={ZODIAC_SIGNS_O}/>
+        <TS l="Venus" v={p.natalVenus} s={v=>upd({natalVenus:v})} opts={ZODIAC_SIGNS_O}/>
+        <TS l="Mars" v={p.natalMars} s={v=>upd({natalMars:v})} opts={ZODIAC_SIGNS_O}/>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
+        <TS l="Jupiter" v={p.natalJupiter} s={v=>upd({natalJupiter:v})} opts={ZODIAC_SIGNS_O}/>
+        <TS l="Saturn" v={p.natalSaturn} s={v=>upd({natalSaturn:v})} opts={ZODIAC_SIGNS_O}/>
+        <TS l="Chiron" v={p.natalChiron} s={v=>upd({natalChiron:v})} opts={ZODIAC_SIGNS_O}/>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+        <TS l="North Node" v={p.natalNorthNode} s={v=>upd({natalNorthNode:v})} opts={ZODIAC_SIGNS_O}/>
+        <TS l="South Node" v={p.natalSouthNode} s={v=>upd({natalSouthNode:v})} opts={ZODIAC_SIGNS_O}/>
+      </div>
+      <GD label="Key House Cusps (optional)"/>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:10}}>
+        <TS l="1st House (Self)" v={p.natalHouse1} s={v=>upd({natalHouse1:v})} opts={ZODIAC_SIGNS_O}/>
+        <TS l="4th House (Home)" v={p.natalHouse4} s={v=>upd({natalHouse4:v})} opts={ZODIAC_SIGNS_O}/>
+        <TS l="7th House (Partnership)" v={p.natalHouse7} s={v=>upd({natalHouse7:v})} opts={ZODIAC_SIGNS_O}/>
+        <TS l="10th House (Career)" v={p.natalHouse10} s={v=>upd({natalHouse10:v})} opts={ZODIAC_SIGNS_O}/>
+      </div>
+      <TTA l="Major Aspects or Patterns (optional)" v={p.natalAspects} s={v=>upd({natalAspects:v})} p="e.g. Sun conjunct Saturn, T-square in cardinal signs, stellium in 8th house..." rows={2}/>
+      <TS l="Where did you get your chart?" v={p.natalSource} s={v=>upd({natalSource:v})} opts={[{v:"astro.com",l:"Astro.com"},{v:"costar",l:"Co-Star"},{v:"timepassages",l:"TimePassages"},{v:"cafeastrology",l:"Cafe Astrology"},{v:"astrodienst",l:"Astrodienst"},{v:"practitioner",l:"From a practitioner"},{v:"other",l:"Other / Unknown"}]}/>
 
       <GD label="Shadow Work"/>
       <p style={{fontSize:12,color:"rgba(255,255,255,.35)",marginBottom:12,fontStyle:"italic",lineHeight:1.7}}>🌑 The shadow is not what is wrong with you — it is what has been unwitnessed. These selections directly shape the shadow work and frequency protocol in your reading.</p>
