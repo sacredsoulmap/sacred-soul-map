@@ -451,7 +451,7 @@ Return ONLY a valid JSON object — no markdown, no backticks, no explanation. U
 // ═══════════════════════════════════════════════════════════
 async function generateReading(formData){
   const prompt=buildPrompt(formData);
-  const res=await fetch("https://api.anthropic.com/v1/messages",{
+  const res=await fetch("/api/reading",{
     method:"POST",
     headers:{"Content-Type":"application/json"},
     body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:5000,messages:[{role:"user",content:prompt}]})
