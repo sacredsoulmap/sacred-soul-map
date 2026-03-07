@@ -4,7 +4,7 @@ import { useState } from "react";
 // ⚙️  CONFIG  — replace before deploying
 // ═══════════════════════════════════════════════════════════
 const CFG = {
-  EMAILJS_SERVICE_ID:  "service_kw55hqi",
+  EMAILJS_SERVICE_ID:  "service_8wvh9nx",
 EMAILJS_TEMPLATE_ID: "template_hqle32c",
 EMAILJS_PUBLIC_KEY:  "dkHFmGFcO68nWPpAc",
 PRACTITIONER_EMAIL:  "sacredsoulmap@gmail.com",
