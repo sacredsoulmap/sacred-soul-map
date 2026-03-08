@@ -34,6 +34,10 @@ function digitSum(str) {
 
 function calcNums(p) {
   const full = [p.legalFirst, p.legalMiddle, p.legalLast].filter(Boolean).join(" ");
+  const hasCurrent = p.currentFirst || p.currentMiddle || p.currentLast;
+  const currentFull = hasCurrent
+    ? [p.currentFirst || p.legalFirst, p.currentMiddle || p.legalMiddle, p.currentLast || p.legalLast].filter(Boolean).join(" ")
+    : null;
   const m = Number(p.bMonth), d = Number(p.bDay), y = Number(p.bYear);
   const curY = new Date().getFullYear();
 
@@ -92,6 +96,10 @@ function calcNums(p) {
     if (m === next[1] && d < next[2]) { sunSign = name; break; }
   }
 
+  const currentExpression = currentFull ? reduce(nameSum(currentFull)) : null;
+  const currentSoulUrge    = currentFull ? reduce(nameSum(currentFull, "v")) : null;
+  const currentPersonality = currentFull ? reduce(nameSum(currentFull, "c")) : null;
+
   return {
     fullName: full, lifePath, expression, soulUrge, personality, birthday,
     personalYear, maturity, missing, karmicDebts,
@@ -99,6 +107,8 @@ function calcNums(p) {
     pinnacleAges: [p1end, p2end, p3end],
     activePinnacle, activePinnacleNum,
     chinese, sunSign,
+    currentFull, currentExpression, currentSoulUrge, currentPersonality,
+    hasCurrent: !!currentFull,
   };
 }
 
@@ -132,10 +142,22 @@ function buildPrompt(p, tier) {
     "Rising: " + (p.natalRising || "Not provided"),
     "North Node: " + (p.natalNorthNode || "Not provided"),
     "Chiron: " + (p.natalChiron || "Not provided"),
-    "Shadow themes: " + (p.shadowThemes || "Not specified"),
+    "Shadow themes: " + (Array.isArray(p.shadowThemes) ? p.shadowThemes.join(", ") : p.shadowThemes || "Not specified"),
     "Goals: " + (p.goals || "Not specified"),
     "",
   ];
+
+  // Name comparison block — only if current name differs from birth name
+  if (n.hasCurrent) {
+    lines.push("NAME EVOLUTION — BIRTH vs CURRENT:");
+    lines.push("Birth name: " + n.fullName);
+    lines.push("Current name: " + n.currentFull);
+    lines.push("Expression:   " + n.expression + " (birth) → " + n.currentExpression + " (current)" + (n.expression === n.currentExpression ? " [unchanged]" : " [SHIFTED]"));
+    lines.push("Soul Urge:    " + n.soulUrge + " (birth) → " + n.currentSoulUrge + " (current)" + (n.soulUrge === n.currentSoulUrge ? " [unchanged]" : " [SHIFTED]"));
+    lines.push("Personality:  " + n.personality + " (birth) → " + n.currentPersonality + " (current)" + (n.personality === n.currentPersonality ? " [unchanged]" : " [SHIFTED]"));
+    lines.push("Include a nameEvolution section in the JSON covering: what each number shift means, what energies they stepped away from, what they stepped into, and whether this name change was a soul-aligned move or a contraction.");
+    lines.push("");
+  }
 
   if (tier === "soul-spark") {
     lines.push("Generate ONLY these JSON fields: cosmicSnapshot, lifePath, expression, soulUrge, personalYear, chineseZodiac, soulMessage");
@@ -192,7 +214,18 @@ function buildPrompt(p, tier) {
         deepestChallenge: "3-4 sentences on the central tension between key energies",
         soulSignature: "2-3 sentences — the essence of " + name + " at soul level",
       },
-      soulMessage: "8-10 sentences written directly to " + name + ". Weave Life Path " + n.lifePath + ", Expression " + n.expression + ", Personal Year " + n.personalYear + ", core pattern, deepest challenge, greatest gift. Speak to the soul. End with one sentence of pure truth."
+      soulMessage: "8-10 sentences written directly to " + name + ". Weave Life Path " + n.lifePath + ", Expression " + n.expression + ", Personal Year " + n.personalYear + ", core pattern, deepest challenge, greatest gift. Speak to the soul. End with one sentence of pure truth.",
+      ...(n.hasCurrent ? { nameEvolution: {
+        birthName: n.fullName,
+        currentName: n.currentFull,
+        expressionShift: n.expression + " → " + n.currentExpression,
+        soulUrgeShift: n.soulUrge + " → " + n.currentSoulUrge,
+        personalityShift: n.personality + " → " + n.currentPersonality,
+        whatYouLeftBehind: "4-5 sentences on the numerological energy of the birth name — what gifts and wounds were encoded there",
+        whatYouSteppedInto: "4-5 sentences on the current name energy — what new soul contract was activated",
+        alignment: "3-4 sentences — was this name change a soul-aligned expansion or a contraction? What does the numerology reveal about why it happened?",
+        integration: "3-4 sentences on how to honor both names — the root and the current chapter"
+      }} : {})
     }));
   }
 
@@ -420,7 +453,7 @@ function ChakraPicker({selected, onChange}) {
 
 const emptyP = () => ({
   pronouns:"", preferredName:"", legalFirst:"", legalMiddle:"", legalLast:"",
-  currentFirst:"", currentLast:"",
+  currentFirst:"", currentMiddle:"", currentLast:"",
   bMonth:"", bDay:"", bYear:"", timeKnown:"", bHour:"", bMinute:"",
   bCity:"", bState:"", bCountry:"",
   natalSun:"", natalMoon:"", natalRising:"", natalMercury:"", natalVenus:"", natalMars:"",
@@ -550,6 +583,24 @@ function ReadingView({ reading: r, name, onEmail, emailSt }) {
     {(r.chineseZodiac) && <Sec icon="🐉" title={"Chinese Zodiac — " + (r.chineseZodiac.sign || "")} color="#D47E9B">
       <p style={{ fontSize:13, color:"rgba(255,255,255,.68)", lineHeight:1.88, marginBottom:10 }}>{r.chineseZodiac.reading}</p>
       {r.chineseZodiac.crossReference && <p style={{ fontSize:13, color:"rgba(255,255,255,.68)", lineHeight:1.88 }}>{r.chineseZodiac.crossReference}</p>}
+    </Sec>}
+
+    {r.nameEvolution && <Sec icon="✦" title={"Name Evolution: " + r.nameEvolution.birthName + " → " + r.nameEvolution.currentName} color="#C8A96E">
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:20}}>
+        {[["Expression",r.nameEvolution.expressionShift],["Soul Urge",r.nameEvolution.soulUrgeShift],["Personality",r.nameEvolution.personalityShift]].map(([label,shift]) => {
+          const parts = (shift||"").split(" → ");
+          const changed = parts[0] !== parts[1];
+          return <div key={label} style={{background:"rgba(200,169,110,.07)",border:"1px solid rgba(200,169,110,.2)",borderRadius:5,padding:"10px 12px",textAlign:"center"}}>
+            <div style={{fontFamily:"'Cinzel',serif",fontSize:9,letterSpacing:".12em",color:"rgba(200,169,110,.6)",textTransform:"uppercase",marginBottom:6}}>{label}</div>
+            <div style={{fontSize:16,color:"#C8A96E",fontFamily:"'Cinzel',serif"}}>{shift}</div>
+            <div style={{fontSize:10,color:changed?"#7EC4D4":"rgba(255,255,255,.3)",marginTop:4}}>{changed ? "✦ Shifted" : "Unchanged"}</div>
+          </div>;
+        })}
+      </div>
+      {[["What You Left Behind",r.nameEvolution.whatYouLeftBehind,"rgba(200,169,110,.7)"],["What You Stepped Into",r.nameEvolution.whatYouSteppedInto,"rgba(126,196,212,.7)"],["Soul Alignment",r.nameEvolution.alignment,"rgba(155,126,212,.7)"],["Integration",r.nameEvolution.integration,"rgba(126,196,212,.6)"]].map(([label,text,col]) => text ? <div key={label} style={{marginBottom:16}}>
+        <div style={{fontFamily:"'Cinzel',serif",fontSize:9,letterSpacing:".12em",color:col,textTransform:"uppercase",marginBottom:6}}>{label}</div>
+        <p style={{fontSize:14,lineHeight:1.85,color:"rgba(255,255,255,.82)"}}>{text}</p>
+      </div> : null)}
     </Sec>}
 
     {r.shadowWork && <Sec icon="🌑" title="Shadow Work" color="#9B7ED4">
@@ -755,8 +806,12 @@ export default function App() {
 
             {isFull && <>
               <GD label="Current Name (if different from birth)" />
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+              <div style={{background:"rgba(200,169,110,.04)",border:"1px solid rgba(200,169,110,.12)",borderRadius:6,padding:"10px 14px",marginBottom:12,fontSize:11,color:"rgba(255,255,255,.38)",fontStyle:"italic",lineHeight:1.8}}>
+                ✦ If your name has changed — married name, chosen name, legally changed — your reading will include a <strong style={{color:"rgba(200,169,110,.7)"}}>then vs now comparison</strong> showing what numerological energies shifted and what that means for your path.
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
                 <TI l="Current First Name" v={person.currentFirst} s={v => upd({currentFirst:v})} p="If different from birth" />
+                <TI l="Current Middle Name" v={person.currentMiddle} s={v => upd({currentMiddle:v})} p="If applicable" />
                 <TI l="Current Last Name" v={person.currentLast} s={v => upd({currentLast:v})} p="Married / chosen name" />
               </div>
 
