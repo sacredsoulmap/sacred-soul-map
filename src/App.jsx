@@ -10,33 +10,27 @@ const CFG = {
 
 // ─── NUMEROLOGY ENGINE (David A. Phillips — Complete Book of Numerology) ──────
 const LV = {A:1,B:2,C:3,D:4,E:5,F:6,G:7,H:8,I:9,J:1,K:2,L:3,M:4,N:5,O:6,P:7,Q:8,R:9,S:1,T:2,U:3,V:4,W:5,X:6,Y:7,Z:8};
-const VOWELS = new Set(["A","E","I","O","U"]);
+const BASE_VOWELS = new Set(["A","E","I","O","U"]);
+const VOWELS = BASE_VOWELS;
 const lv = c => LV[c.toUpperCase()] || 0;
 
-// Planes of Expression per Phillips
-// Physical: D(4), E(5), M(4), W(5) — earth/body
-// Mental: A(1), G(7), H(8), J(1), N(5), P(7) — intellect
-// Emotional: B(2), C(3), F(6), I(9), K(2), L(3), O(6), R(9), S(1), T(2), U(3), X(6), Z(8) — feelings
-// Intuitive: Q(8), V(4), Y(7) — inspiration/higher mind
-const PLANE_MAP = {
-  A:"Mental",B:"Emotional",C:"Emotional",D:"Physical",E:"Physical",
-  F:"Emotional",G:"Mental",H:"Mental",I:"Emotional",J:"Mental",
-  K:"Emotional",L:"Emotional",M:"Physical",N:"Mental",O:"Emotional",
-  P:"Mental",Q:"Intuitive",R:"Emotional",S:"Emotional",T:"Emotional",
-  U:"Emotional",V:"Intuitive",W:"Physical",X:"Emotional",Y:"Intuitive",Z:"Emotional"
-};
-
-function reduce(n, keepMaster = true) {
-  if (keepMaster && (n === 11 || n === 22 || n === 33)) return n;
-  if (n < 10) return n;
-  const sum = String(n).split("").reduce((s, d) => s + Number(d), 0);
-  return reduce(sum, keepMaster);
+// Phillips: Y is a vowel when it carries a vowel sound (e.g. COURTNEY, MARY)
+// Y = vowel if NOT first letter AND not followed by another base vowel
+function isVowelPhillips(c, idx, arr) {
+  const u = c.toUpperCase();
+  if (BASE_VOWELS.has(u)) return true;
+  if (u !== "Y") return false;
+  if (idx === 0) return false;
+  const next = arr[idx + 1] ? arr[idx + 1].toUpperCase() : "";
+  return !BASE_VOWELS.has(next);
 }
 
 function nameSum(name, filter) {
-  return name.toUpperCase().replace(/[^A-Z]/g, "").split("").reduce((s, c) => {
-    if (filter === "v" && !VOWELS.has(c)) return s;
-    if (filter === "c" && VOWELS.has(c)) return s;
+  const letters = name.toUpperCase().replace(/[^A-Z]/g, "").split("");
+  return letters.reduce((s, c, idx) => {
+    const vowel = isVowelPhillips(c, idx, letters);
+    if (filter === "v" && !vowel) return s;
+    if (filter === "c" && vowel) return s;
     return s + lv(c);
   }, 0);
 }
@@ -108,7 +102,7 @@ function calcNums(p) {
   const intensityAbsent = Object.entries(intensity).filter(([,v]) => v === 0).map(([k]) => k).join(", ");
 
   // ── First Vowel (primary soul motivation key per Phillips) ──
-  const firstVowel = allLetters.find(c => VOWELS.has(c)) || "";
+  const firstVowel = allLetters.find((c, idx) => isVowelPhillips(c, idx, allLetters)) || "";
 
   // ── Planes of Expression ──
   const planes = { Physical:0, Mental:0, Emotional:0, Intuitive:0 };
@@ -220,9 +214,19 @@ function buildPrompt(p, tier) {
   const isFull = tier !== "soul-spark";
 
   const lines = [
-    "You are a master numerologist trained in David A. Philips' Complete Book of Numerology, a Western natal chart astrologer, a Chinese metaphysics scholar (4 Pillars, Zi Wei Dou Shu awareness), and a shadow integration guide. Your readings are precise, personal, and transformative — never generic.",
+    "You are a master numerologist trained in David A. Phillips' Complete Book of Numerology, a Western natal chart astrologer, a Chinese metaphysics scholar, and a shadow integration guide.",
     "",
-    "CRITICAL: Return ONLY a raw JSON object. No markdown. No backticks. No explanation. No text before or after. Start your response with { and end with }.",
+    "════════════════════════════════════════════════════",
+    "ABSOLUTE RULES — violating any of these invalidates the reading:",
+    "1. Return ONLY a raw JSON object. No markdown. No backticks. No preamble. Start with { end with }.",
+    "2. Every JSON field listed in the schema MUST be present and contain real content — not placeholder text.",
+    "3. Every numerology section MUST reference the actual numbers provided (e.g. Life Path " + n.lifePath + ", not a generic description).",
+    "4. Every astrology section MUST name the actual placements provided (e.g. 'Moon in Taurus at 29°').",
+    "5. SHADOW WORK RULE: You may ONLY reference personal history, wounds, or biographical details that were EXPLICITLY written in the form fields below. Do NOT infer, assume, or extrapolate any life events, relationships, family history, or traumas that were not directly stated. If no personal context was shared, base shadow work entirely on the numbers and chart.",
+    "6. Missing numbers CANNOT also be core numbers. If a number appears in 'Missing Numbers' it cannot also be the Soul Urge or any other core number — check for contradictions before writing.",
+    "7. The Arrows of Pythagoras section is REQUIRED and must specifically name which arrows are present and which are absent.",
+    "8. The Planes of Expression section is REQUIRED and must reference the actual distribution: Physical=" + n.planes.Physical + " Mental=" + n.planes.Mental + " Emotional=" + n.planes.Emotional + " Intuitive=" + n.planes.Intuitive + ".",
+    "════════════════════════════════════════════════════",
     "",
     "══════════════════════════════════════════",
     "PERSON: " + name,
@@ -278,9 +282,9 @@ function buildPrompt(p, tier) {
     "Secret animal (birth hour): " + n.chinese.secretAnimal,
     "",
     "── WESTERN ASTROLOGY ──",
-    "Sun: " + (p.natalSun || n.sunSign),
-    "Moon: " + (p.natalMoon || "Not provided"),
-    "Rising/ASC: " + (p.natalRising || "Not provided"),
+    "Sun: " + (p.natalSun || n.sunSign) + (p.natalSunDeg ? " " + p.natalSunDeg + "°" : ""),
+    "Moon: " + (p.natalMoon || "Not provided") + (p.natalMoonDeg ? " " + p.natalMoonDeg + "°" : "") + (p.natalMoonDeg === "29" ? " [ANARETIC DEGREE — heightened urgency, completing a soul cycle in this sign]" : ""),
+    "Rising/ASC: " + (p.natalRising || "Not provided") + (p.natalRisingDeg ? " " + p.natalRisingDeg + "°" : ""),
     "Mercury: " + (p.natalMercury || "Not provided"),
     "Venus: " + (p.natalVenus || "Not provided"),
     "Mars: " + (p.natalMars || "Not provided"),
@@ -334,7 +338,8 @@ function buildPrompt(p, tier) {
       soulMessage: "4 sentences to " + name + ". End with 1 sentence of pure truth."
     }));
   } else {
-    lines.push("Generate ALL JSON fields below. STRICT sentence counts — do NOT exceed them. Be precise and personal — never generic. Use the data above deeply.");
+    lines.push("MANDATORY: Generate ALL JSON fields in the schema below. Every single field must contain real, specific content referencing the actual numbers and placements above. NEVER write placeholder text. NEVER leave a field as just a description of what it should contain. Write the actual reading.");
+    lines.push("VERIFY BEFORE WRITING: Soul Urge=" + n.soulUrge + ", Expression=" + n.expression + ", Personality=" + n.personality + ", Missing=" + (n.missing.join(",") || "none") + ". These are the ONLY correct values. Do not recalculate.");
     lines.push(JSON.stringify({
       cosmicSnapshot: "3 sentences. Weave Life Path " + n.lifePath + ", Personal Year " + n.personalYear + ", and dominant plane (" + n.dominantPlane + ") into a single thematic arc for " + name + ".",
 
@@ -442,11 +447,11 @@ function buildPrompt(p, tier) {
       },
 
       shadowWork: {
-        coreWound: "3 sentences on the deepest shadow thread running through ALL layers — numerology + astrology + Chinese zodiac pointing to the same wound",
-        origin: "2 sentences on where this pattern likely took root (early life, ancestral, past life imprint)",
-        theGold: "3 sentences on what integrating this shadow unlocks — the superpower hiding in the darkness",
-        soulInvitation: "2 sentences — what is life specifically inviting " + name + " to stop doing and start embodying?",
-        prompts: ["5 journal prompts — each one penetrating, specific to this soul's data, not generic. Each prompt should crack something open."]
+        coreWound: "3 sentences. Draw ONLY from the numbers (Life Path " + n.lifePath + ", missing " + (n.missing.join(",")||"none") + ", arrows), astrology, and ONLY what was explicitly shared in the form. Name the specific number or placement driving this pattern.",
+        origin: "2 sentences on likely origin — draw from the numerology and chart data. Only reference biographical details if they were explicitly shared in the form.",
+        theGold: "3 sentences on what integrating this shadow unlocks — name the specific superpower hidden in Life Path " + n.lifePath + " and the chart.",
+        soulInvitation: "2 sentences — what is life specifically inviting " + name + " to stop doing and start embodying, based on Personal Year " + n.personalYear + " and active Challenge " + n.activeChallenge + "?",
+        prompts: ["5 journal prompts. Each must reference specific data: a number, a placement, an arrow, or something explicitly shared. No generic prompts. Make each one crack something open for this specific soul."]
       },
 
       holisticSynthesis: {
@@ -485,7 +490,7 @@ async function generateReading(p, tier, onProgress) {
     body: JSON.stringify({
       model: "claude-sonnet-4-20250514",
       max_tokens: 16000,
-      system: "You are a numerology and astrology reading generator trained in David A. Phillips' Complete Book of Numerology. You MUST respond with ONLY a valid JSON object. No markdown formatting. No backticks. No code fences. No explanation text before or after. No preamble. Your ENTIRE response must be parseable by JSON.parse(). Start immediately with { and end with }.",
+      system: "You are a numerology and astrology reading generator trained in David A. Phillips' Complete Book of Numerology. RULES: (1) Respond with ONLY a valid JSON object — no markdown, no backticks, no preamble. Start with { end with }. (2) Every field in the schema must contain actual reading content, not placeholder descriptions. (3) Only reference personal history explicitly shared in the form. (4) Verify numbers match exactly: do not recalculate or override the provided values.",
       messages: [{ role: "user", content: prompt }]
     })
   });
@@ -693,6 +698,7 @@ const emptyP = () => ({
   currentFirst:"", currentMiddle:"", currentLast:"",
   bMonth:"", bDay:"", bYear:"", timeKnown:"", bHour:"", bMinute:"",
   bCity:"", bState:"", bCountry:"",
+  natalSunDeg:"", natalMoonDeg:"", natalRisingDeg:"",
   natalSun:"", natalMoon:"", natalRising:"", natalMercury:"", natalVenus:"", natalMars:"",
   natalJupiter:"", natalSaturn:"", natalUranus:"", natalNeptune:"", natalPluto:"",
   natalChiron:"", natalNorthNode:"", natalSouthNode:"",
@@ -1226,6 +1232,12 @@ export default function App() {
                 <TS l="Moon Sign" v={person.natalMoon} s={v => upd({natalMoon:v})} opts={ZODIAC} />
                 <TS l="Rising / Ascendant" v={person.natalRising} s={v => upd({natalRising:v})} opts={ZODIAC} />
               </div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:4}}>
+                <TI l="Sun Degree (optional)" v={person.natalSunDeg} s={v => upd({natalSunDeg:v})} p="e.g. 20" />
+                <TI l="Moon Degree (optional)" v={person.natalMoonDeg} s={v => upd({natalMoonDeg:v})} p="e.g. 29 = anaretic" />
+                <TI l="Rising Degree (optional)" v={person.natalRisingDeg} s={v => upd({natalRisingDeg:v})} p="e.g. 13" />
+              </div>
+              <div style={{fontSize:10,color:"rgba(255,255,255,.25)",marginBottom:12,fontStyle:"italic"}}>Degree shown on astro.com next to each placement — e.g. "Moon 29°55' Taurus" → enter 29. The 29th degree (anaretic) is especially significant.</div>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
                 <TS l="Mercury" v={person.natalMercury} s={v => upd({natalMercury:v})} opts={ZODIAC} />
                 <TS l="Venus" v={person.natalVenus} s={v => upd({natalVenus:v})} opts={ZODIAC} />
@@ -1332,3 +1344,4 @@ export default function App() {
     </div>
   </>;
 }
+
