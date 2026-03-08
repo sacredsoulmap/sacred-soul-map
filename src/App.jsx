@@ -518,8 +518,8 @@ async function generateReading(p, tier, onProgress) {
     body: JSON.stringify({
       model: "claude-sonnet-4-20250514",
       max_tokens: 16000,
-      system: "You are a numerology and astrology reading generator trained in David A. Phillips' Complete Book of Numerology. RULES: (1) Respond with ONLY a valid JSON object — no markdown, no backticks, no preamble. Start with { end with }. (2) Every field in the schema must contain actual reading content, not placeholder descriptions. (3) Only reference personal history explicitly shared in the form. (4) Verify numbers match exactly: do not recalculate or override the provided values.",
-      messages: [{ role: "user", content: prompt }]
+      system: "You are a sacred numerology and astrology reading generator. OUTPUT FORMAT: You must respond with ONLY a raw JSON object. NO markdown. NO backticks. NO explanations. NO preamble. Your ENTIRE response must be valid JSON starting with { and ending with }. CONTENT RULES: (1) Every field must contain real reading content. (2) Never use double-quotes inside string values — use single quotes or rephrase. (3) Never add line breaks inside string values. (4) Do not recalculate or override the exact numbers provided.",
+      messages: [{ role: "user", content: prompt }, { role: "assistant", content: "{" }]
     })
   });
   if (!res.ok) throw new Error("Server error: " + res.status);
@@ -553,19 +553,43 @@ async function generateReading(p, tier, onProgress) {
   }
 
   let clean = accumulated.trim();
+  // Strip markdown fences
   clean = clean.replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/\s*```$/i, "").trim();
+  // Extract JSON object
   const first = clean.indexOf("{");
   const last = clean.lastIndexOf("}");
   if (first !== -1 && last !== -1 && last > first) {
     clean = clean.slice(first, last + 1);
   }
+  // Attempt 1: direct parse
+  try { return JSON.parse(clean); } catch {}
+  // Attempt 2: remove trailing commas
+  try { return JSON.parse(clean.replace(/,\s*([}\]])/g, "$1")); } catch {}
+  // Attempt 3: aggressive multi-pass repair
   try {
-    return JSON.parse(clean);
-  } catch (e) {
-    const fixed = clean.replace(/,\s*([}\]])/g, "$1");
-    try { return JSON.parse(fixed); } catch {}
-    throw new Error("Reading complete but JSON failed. Please try again.");
-  }
+    let f = clean;
+    // Remove trailing commas
+    f = f.replace(/,\s*([}\]])/g, "$1");
+    // Fix unescaped newlines inside strings: replace literal newlines within quotes
+    f = f.replace(/"((?:[^"\\]|\\.)*)"/g, (m, inner) => {
+      const fixed = inner.replace(/\n/g, "\\n").replace(/\r/g, "\\r").replace(/\t/g, "\\t");
+      return '"' + fixed + '"';
+    });
+    return JSON.parse(f);
+  } catch {}
+  // Attempt 4: extract valid fields we can and build partial object
+  try {
+    const partial = {};
+    const snapMatch = clean.match(/"cosmicSnapshot"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+    if (snapMatch) partial.cosmicSnapshot = snapMatch[1];
+    const msgMatch = clean.match(/"soulMessage"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+    if (msgMatch) partial.soulMessage = msgMatch[1];
+    if (Object.keys(partial).length > 0) {
+      partial._partial = true;
+      return partial;
+    }
+  } catch {}
+  throw new Error("Reading complete but JSON failed. Please try again.");
 }
 
 // ─── EMAIL ────────────────────────────────────────────────
