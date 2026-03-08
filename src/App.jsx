@@ -167,73 +167,72 @@ function buildPrompt(p, tier) {
 
   if (tier === "soul-spark") {
     lines.push("Generate ONLY these JSON fields: cosmicSnapshot, lifePath, expression, soulUrge, personalYear, chineseZodiac, soulMessage");
-    lines.push("");
-    lines.push("JSON schema:");
+    lines.push("STRICT LENGTH LIMITS — exceed these and the JSON will be rejected:");
     lines.push(JSON.stringify({
-      cosmicSnapshot: "3-4 sentence poetic opening. Name the central theme of this chart. Reference " + name + " and Life Path " + n.lifePath + ".",
-      lifePath: { number: n.lifePath, title: "evocative 3-word title", essence: "one-sentence core essence", reading: "5-6 deeply personal sentences on soul purpose, highest expressions, shadow side. Reference " + name + " directly.", shadow: "2-3 sentences on ego traps" },
-      expression: { number: n.expression, title: "title", reading: "4-5 sentences on natural talents and destiny" },
-      soulUrge: { number: n.soulUrge, title: "title", reading: "4-5 sentences on the deepest private desire" },
-      personalYear: { number: n.personalYear, reading: "4-5 sentences on what Personal Year " + n.personalYear + " means for " + name + " specifically" },
-      chineseZodiac: { sign: n.chinese.element + " " + n.chinese.animal, reading: "3-4 sentences on this specific sign and how it intersects with Life Path " + n.lifePath },
-      soulMessage: "8-10 sentences written directly to " + name + ". Weave Life Path " + n.lifePath + ", Expression " + n.expression + ", Personal Year " + n.personalYear + ". Speak to the soul. End with one sentence of pure truth."
+      cosmicSnapshot: "2 sentences max. Theme + Life Path " + n.lifePath + " reference.",
+      lifePath: { number: n.lifePath, title: "3-word title", essence: "1 sentence", reading: "3 sentences on soul purpose. Name " + name + ".", shadow: "1 sentence on ego trap" },
+      expression: { number: n.expression, title: "3-word title", reading: "2 sentences on talents" },
+      soulUrge: { number: n.soulUrge, title: "3-word title", reading: "2 sentences on inner desire" },
+      personalYear: { number: n.personalYear, reading: "2 sentences on Personal Year " + n.personalYear },
+      chineseZodiac: { sign: n.chinese.element + " " + n.chinese.animal, reading: "2 sentences" },
+      soulMessage: "4 sentences to " + name + ". End with 1 sentence of pure truth."
     }));
   } else {
-    lines.push("Generate ALL of these JSON fields:");
+    lines.push("Generate ALL of these JSON fields. STRICT: max sentence counts shown — do NOT exceed them:");
     lines.push(JSON.stringify({
-      cosmicSnapshot: "2-3 sentence poetic opening naming the central theme for " + name + " with Life Path " + n.lifePath + ".",
+      cosmicSnapshot: "2 sentences. Theme for " + name + ", Life Path " + n.lifePath + ".",
       numerology: {
-        lifePath: { number: n.lifePath, title: "evocative 3-word title", essence: "one sentence", reading: "3-4 sentences on soul purpose and highest expression", shadow: "2 sentences on ego trap" },
-        expression: { number: n.expression, title: "title", reading: "3 sentences on natural talents" },
-        soulUrge: { number: n.soulUrge, title: "title", reading: "3 sentences on deepest private desire" },
-        personality: { number: n.personality, title: "title", reading: "2-3 sentences on outer impression" },
-        birthday: { number: n.birthday, title: "title", reading: "2 sentences on this special gift" },
-        personalYear: { number: n.personalYear, reading: "3 sentences on Personal Year " + n.personalYear + " for " + name + " — Pinnacle " + n.activePinnacle + " context" },
-        maturity: { number: n.maturity, reading: "2 sentences on the energy emerging after 40" },
-        missing: { numbers: n.missing, reading: "2 sentences on karmic lessons of: " + (n.missing.join(", ") || "none") },
+        lifePath: { number: n.lifePath, title: "3-word title", essence: "1 sentence", reading: "3 sentences", shadow: "1 sentence" },
+        expression: { number: n.expression, title: "3-word title", reading: "2 sentences" },
+        soulUrge: { number: n.soulUrge, title: "3-word title", reading: "2 sentences" },
+        personality: { number: n.personality, title: "3-word title", reading: "2 sentences" },
+        birthday: { number: n.birthday, title: "3-word title", reading: "1 sentence" },
+        personalYear: { number: n.personalYear, reading: "2 sentences. Pinnacle " + n.activePinnacle + " context." },
+        maturity: { number: n.maturity, reading: "1 sentence" },
+        missing: { numbers: n.missing, reading: "1 sentence on: " + (n.missing.join(", ") || "none") },
         karmicDebts: n.karmicDebts.length ? n.karmicDebts.join(", ") : null,
-        karmicReading: n.karmicDebts.length ? "2-3 sentences on karmic debt " + n.karmicDebts.join(", ") : null,
-        pinnacles: "3 sentences on pinnacles arc " + n.pinnacles.join(", ") + " — which is active and what it asks",
-        activeTiming: "3 sentences on this exact convergence — Pinnacle " + n.activePinnacle + ", Personal Year " + n.personalYear + " for " + name,
+        karmicReading: n.karmicDebts.length ? "2 sentences on " + n.karmicDebts.join(", ") : null,
+        pinnacles: "2 sentences on arc " + n.pinnacles.join(", ") + ". Active: Pinnacle " + n.activePinnacle,
+        activeTiming: "2 sentences on Pinnacle " + n.activePinnacle + " + Personal Year " + n.personalYear,
       },
       astrology: {
-        sunReading: "3 sentences on " + (p.natalSun || n.sunSign) + " Sun + Life Path " + n.lifePath,
-        moonReading: "3 sentences on " + (p.natalMoon || "Moon") + " — emotional needs and inner world",
-        risingReading: "2-3 sentences on " + (p.natalRising || "Rising") + " — outer mask, Personality " + n.personality,
-        northNodeReading: "2-3 sentences on North Node " + (p.natalNorthNode || "") + " — soul direction",
-        chironReading: "2-3 sentences on Chiron " + (p.natalChiron || "") + " — wound and healer gift",
-        innerPlanets: "2-3 sentences synthesizing Mercury " + (p.natalMercury||"") + ", Venus " + (p.natalVenus||"") + ", Mars " + (p.natalMars||""),
-        outerPlanets: "2 sentences on Jupiter " + (p.natalJupiter||"") + " and Saturn " + (p.natalSaturn||""),
-        mc: (p.natalHouse10 ? "2 sentences on MC in " + p.natalHouse10 + " — public calling" : null),
+        sunReading: "2 sentences. " + (p.natalSun || n.sunSign) + " Sun + Life Path " + n.lifePath,
+        moonReading: "2 sentences. " + (p.natalMoon || "Moon") + " emotional world",
+        risingReading: "2 sentences. " + (p.natalRising || "Rising") + " outer mask",
+        northNodeReading: "2 sentences. North Node " + (p.natalNorthNode || "") + " soul direction",
+        chironReading: "2 sentences. Chiron " + (p.natalChiron || "") + " wound + gift",
+        innerPlanets: "2 sentences. Mercury " + (p.natalMercury||"") + ", Venus " + (p.natalVenus||"") + ", Mars " + (p.natalMars||""),
+        outerPlanets: "1 sentence. Jupiter " + (p.natalJupiter||"") + ", Saturn " + (p.natalSaturn||""),
+        mc: (p.natalHouse10 ? "1 sentence. MC " + p.natalHouse10 : null),
       },
       chineseZodiac: {
         sign: n.chinese.element + " " + n.chinese.animal + " (" + n.chinese.polarity + ")",
-        reading: "3 sentences on " + n.chinese.element + " " + n.chinese.animal,
-        crossReference: "2 sentences crossing Life Path " + n.lifePath + " with this Chinese archetype",
+        reading: "2 sentences",
+        crossReference: "1 sentence. Life Path " + n.lifePath + " crossover",
       },
       shadowWork: {
-        coreWound: "3 sentences on the central shadow thread — specific, connected to their numbers",
-        origin: "3 sentences on where this wound came from",
-        theGold: "2-3 sentences on what becomes available when integrated",
-        prompts: ["Specific journal prompt 1", "Prompt 2", "Somatic prompt 3", "Relationship prompt 4", "The one they will want to skip"]
+        coreWound: "2 sentences on core shadow thread",
+        origin: "2 sentences on origin",
+        theGold: "2 sentences on what integrating unlocks",
+        prompts: ["prompt 1", "prompt 2", "prompt 3", "prompt 4", "prompt 5"]
       },
       holisticSynthesis: {
-        corePattern: "4 sentences — the ONE thread running through every layer. A true synthesis, not a list.",
-        greatestGift: "2-3 sentences on the most exceptional gift in this chart",
-        deepestChallenge: "2-3 sentences on the central tension",
-        soulSignature: "2 sentences — the essence of " + name + " at soul level",
+        corePattern: "3 sentences — ONE thread through every layer",
+        greatestGift: "2 sentences",
+        deepestChallenge: "2 sentences",
+        soulSignature: "1 sentence on " + name + " at soul level",
       },
-      soulMessage: "5-6 sentences written directly to " + name + ". Weave Life Path " + n.lifePath + ", shadow, gift, Personal Year " + n.personalYear + ". End with one line of pure truth.",
+      soulMessage: "4 sentences to " + name + ". Life Path " + n.lifePath + ", Personal Year " + n.personalYear + ". 1 final truth.",
       ...(n.hasCurrent ? { nameEvolution: {
         birthName: n.fullName,
         currentName: n.currentFull,
-        expressionShift: n.expression + " → " + n.currentExpression,
-        soulUrgeShift: n.soulUrge + " → " + n.currentSoulUrge,
-        personalityShift: n.personality + " → " + n.currentPersonality,
-        whatYouLeftBehind: "3 sentences on the birth name energy",
-        whatYouSteppedInto: "3 sentences on the current name energy",
-        alignment: "2-3 sentences — expansion or contraction?",
-        integration: "2 sentences on honoring both"
+        expressionShift: n.expression + " to " + n.currentExpression,
+        soulUrgeShift: n.soulUrge + " to " + n.currentSoulUrge,
+        personalityShift: n.personality + " to " + n.currentPersonality,
+        whatYouLeftBehind: "2 sentences",
+        whatYouSteppedInto: "2 sentences",
+        alignment: "2 sentences — expansion or contraction",
+        integration: "1 sentence"
       }} : {})
     }));
   }
