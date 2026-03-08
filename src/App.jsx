@@ -815,18 +815,6 @@ export default function App() {
                 <TI l="Current Last Name" v={person.currentLast} s={v => upd({currentLast:v})} p="Married / chosen name" />
               </div>
 
-              <GD label="Time and Place of Birth — Optional" />
-              <TS l="Birth time known?" v={person.timeKnown} s={v => upd({timeKnown:v})} opts={[{v:"exact",l:"Yes — exact"},{v:"approximate",l:"Approximate"},{v:"unknown",l:"Don't know"}]} />
-              {(person.timeKnown === "exact" || person.timeKnown === "approximate") && <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-                <TS l="Hour" v={person.bHour} s={v => upd({bHour:v})} opts={HRS} />
-                <TS l="Minute" v={person.bMinute} s={v => upd({bMinute:v})} opts={MINS} />
-              </div>}
-              <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr",gap:10}}>
-                <TI l="City of Birth" v={person.bCity} s={v => upd({bCity:v})} p="e.g. Dallas" />
-                <TI l="State" v={person.bState} s={v => upd({bState:v})} p="TX" />
-                <TI l="Country" v={person.bCountry} s={v => upd({bCountry:v})} p="USA" />
-              </div>
-
               <GD label="Natal Chart Placements — Optional but Powerful" />
               <div style={{background:"rgba(126,196,212,.04)",border:"1px solid rgba(126,196,212,.12)",borderRadius:7,padding:"14px 16px",marginBottom:16}}>
                 <div style={{fontFamily:"'Cinzel',serif",fontSize:10,letterSpacing:".14em",color:"#7EC4D4",textTransform:"uppercase",marginBottom:8}}>✦ Upload Your Chart — Auto-Fill All Placements</div>
@@ -855,7 +843,17 @@ export default function App() {
                 </label>
                 {person.chartScanStatus === "done" && <p style={{fontSize:11,color:"rgba(126,196,212,.8)",marginTop:8,fontStyle:"italic"}}>✓ Placements filled below — review and adjust anything that looks off.</p>}
                 {person.chartScanStatus === "scanning" && <p style={{fontSize:11,color:"rgba(200,169,110,.7)",marginTop:8,fontStyle:"italic"}}>Claude is reading your chart(s)… about 10–15 seconds.</p>}
-                <p style={{fontSize:10,color:"rgba(255,255,255,.25)",marginTop:10,fontStyle:"italic"}}>Select multiple images at once (chart wheel + planet list + aspects). Or fill in manually below. Free chart at <strong style={{color:"rgba(126,196,212,.5)"}}>astro.com</strong>.</p>
+                <div style={{marginTop:12,background:"rgba(255,255,255,.03)",borderRadius:4,padding:"10px 12px"}}>
+                  <div style={{fontFamily:"'Cinzel',serif",fontSize:9,letterSpacing:".12em",color:"rgba(126,196,212,.5)",textTransform:"uppercase",marginBottom:6}}>How to get your chart from astro.com</div>
+                  <div style={{fontSize:11,color:"rgba(255,255,255,.35)",lineHeight:2}}>
+                    1. Go to <strong style={{color:"rgba(126,196,212,.5)"}}>astro.com</strong><br/>
+                    2. Free Horoscopes → Extended Chart Selection<br/>
+                    3. Enter your birth data<br/>
+                    4. Chart type: <strong style={{color:"rgba(200,169,110,.6)"}}>Natal Chart, Ascendant</strong><br/>
+                    5. Click "Click here to show chart"<br/>
+                    6. Screenshot that page and upload it here ↑
+                  </div>
+                </div>
               </div>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
                 <TS l="Sun Sign" v={person.natalSun} s={v => upd({natalSun:v})} opts={ZODIAC} />
