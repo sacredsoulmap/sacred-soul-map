@@ -241,273 +241,207 @@ function buildPrompt(p, tier) {
   const name = p.preferredName || p.legalFirst || "this soul";
   const isFull = tier !== "soul-spark";
 
-  const lines = [
-    "You are a master numerologist trained in David A. Phillips' Complete Book of Numerology, a Western natal chart astrologer, a Chinese metaphysics scholar, and a shadow integration guide.",
-    "",
-    "════════════════════════════════════════════════════",
-    "ABSOLUTE RULES — violating any of these invalidates the reading:",
-    "1. Return ONLY a raw JSON object. No markdown. No backticks. No preamble. Start with { end with }.",
-    "2. Every JSON field listed in the schema MUST be present and contain real content — not placeholder text.",
-    "3. Every numerology section MUST reference the actual numbers provided (e.g. Life Path " + n.lifePath + ", not a generic description).",
-    "4. Every astrology section MUST name the actual placements provided (e.g. 'Moon in Taurus at 29°').",
-    "5. SHADOW WORK RULE: You may ONLY reference personal history, wounds, or biographical details that were EXPLICITLY written in the form fields below. Do NOT infer, assume, or extrapolate any life events, relationships, family history, or traumas that were not directly stated. If no personal context was shared, base shadow work entirely on the numbers and chart.",
-    "6. Missing numbers CANNOT also be core numbers. If a number appears in 'Missing Numbers' it cannot also be the Soul Urge or any other core number — check for contradictions before writing.",
-    "7. The Arrows of Pythagoras section is REQUIRED and must specifically name which arrows are present and which are absent.",
-    "8. The Planes of Expression section is REQUIRED and must reference the actual distribution: Physical=" + n.planes.Physical + " Mental=" + n.planes.Mental + " Emotional=" + n.planes.Emotional + " Intuitive=" + n.planes.Intuitive + ".",
-    "════════════════════════════════════════════════════",
-    "",
-    "══════════════════════════════════════════",
-    "PERSON: " + name,
-    "Full birth name: " + n.fullName,
-    "DOB: " + p.bMonth + "/" + p.bDay + "/" + p.bYear,
-    "Birth location: " + [p.bCity, p.bState, p.bCountry].filter(Boolean).join(", ") || "Not provided",
-    "",
-    "── CORE NUMBERS (Phillips) ──",
-    "Life Path: " + formatNum(n.lifePath) + (n.masterNumbers.includes(n.lifePath) ? " [MASTER NUMBER]" : ""),
-    "Expression (Destiny): " + formatNum(n.expression),
-    "Soul Urge (Heart's Desire): " + formatNum(n.soulUrge),
-    "Personality: " + formatNum(n.personality),
-    "Birthday Number: " + n.birthday,
-    "Maturity Number: " + formatNum(n.maturity),
-    "",
-    "── TIMING ──",
-    "Personal Year: " + n.personalYear,
-    "Personal Month: " + n.personalMonth,
-    "Personal Day: " + n.personalDay,
-    "Active Pinnacle: " + n.activePinnacle + " (Pinnacle " + n.activePinnacleNum + ")",
-    "Active Challenge: " + n.activeChallenge,
-    "Pinnacle sequence: " + n.pinnacles.join(" → ") + " (ages: <" + n.pinnacleAges[0] + ", " + n.pinnacleAges[0] + "–" + n.pinnacleAges[1] + ", " + n.pinnacleAges[1] + "–" + n.pinnacleAges[2] + ", " + n.pinnacleAges[2] + "+)",
-    "Challenge sequence: " + n.challenges.join(" → "),
-    "",
-    "── DEPTH NUMBERS (Phillips advanced system) ──",
-    "Bridge (Life Path ↔ Expression): " + n.bridgeLifeExp + " — the gap to integrate between outer purpose and inner drive",
-    "Bridge (Soul Urge ↔ Personality): " + n.bridgeSoulPers + " — the gap between authentic desire and how others see you",
-    "Subconscious Self: " + n.subconsciousSelf + "/9 — natural response under pressure (9 = fully resourced; lower = fewer instinctive tools)",
-    "First Vowel of birth name: " + n.firstVowel + " — primary soul motivation key",
-    "Master Numbers present: " + (n.masterNumbers.length ? n.masterNumbers.join(", ") : "None"),
-    "",
-    "── INTENSITY TABLE (name letter frequency) ──",
-    "Peak intensities (overemphasized traits): " + (n.intensityPeak || "None"),
-    "Absent intensities (underdeveloped traits): " + (n.intensityAbsent || "None"),
-    "Full breakdown: " + Object.entries(n.intensity).map(([k,v]) => k+"="+v).join(", "),
-    "",
-    "── PLANES OF EXPRESSION ──",
-    "Physical: " + n.planes.Physical + " letters | Mental: " + n.planes.Mental + " | Emotional: " + n.planes.Emotional + " | Intuitive: " + n.planes.Intuitive,
-    "Dominant plane: " + n.dominantPlane,
-    "",
-    "── MISSING NUMBERS (karmic lessons) ──",
-    "Missing: " + (n.missing.join(", ") || "None — all numbers present"),
-    "Karmic Debts: " + (n.karmicDebts.join(", ") || "None"),
-    "",
-    "── ARROWS OF PYTHAGORAS (birth date grid) ──",
-    "Arrows PRESENT (gifts/strengths): " + (n.arrowsPresent.length ? n.arrowsPresent.join("; ") : "None"),
-    "Arrows ABSENT (soul lessons/challenges): " + (n.arrowsMissing.length ? n.arrowsMissing.join("; ") : "None"),
-    "",
-    "── CHINESE METAPHYSICS ──",
-    "Year animal (public self): " + n.chinese.element + " " + n.chinese.animal + " (" + n.chinese.polarity + ")",
-    "Fixed element: " + n.chinese.fixedElement,
-    "Inner animal / True nature (birth month): " + n.chinese.innerAnimal,
-    "Secret animal (birth hour): " + n.chinese.secretAnimal,
-    "",
-    "── WESTERN ASTROLOGY ──",
-    "Sun: " + (p.natalSun || n.sunSign) + (p.natalSunDeg ? " " + p.natalSunDeg + "°" : ""),
-    "Moon: " + (p.natalMoon || "Not provided") + (p.natalMoonDeg ? " " + p.natalMoonDeg + "°" : "") + (p.natalMoonDeg === "29" ? " [ANARETIC DEGREE — heightened urgency, completing a soul cycle in this sign]" : ""),
-    "Rising/ASC: " + (p.natalRising || "Not provided") + (p.natalRisingDeg ? " " + p.natalRisingDeg + "°" : ""),
-    "Mercury: " + (p.natalMercury || "Not provided"),
-    "Venus: " + (p.natalVenus || "Not provided"),
-    "Mars: " + (p.natalMars || "Not provided"),
-    "Jupiter: " + (p.natalJupiter || "Not provided"),
-    "Saturn: " + (p.natalSaturn || "Not provided"),
-    "Uranus: " + (p.natalUranus || "Not provided"),
-    "Neptune: " + (p.natalNeptune || "Not provided"),
-    "Pluto: " + (p.natalPluto || "Not provided"),
-    "Chiron: " + (p.natalChiron || "Not provided"),
-    "North Node: " + (p.natalNorthNode || "Not provided"),
-    "South Node: " + (p.natalSouthNode || "Not provided"),
-    "MC/10th: " + (p.natalHouse10 || "Not provided"),
-    "IC/4th: " + (p.natalHouse4 || "Not provided"),
-    "DSC/7th: " + (p.natalHouse7 || "Not provided"),
-    "ASC/1st: " + (p.natalHouse1 || "Not provided"),
-    "Part of Fortune: " + (p.natalPartFortune || "Not provided"),
-    "Vertex: " + (p.natalVertex || "Not provided"),
-    "Notable aspects/patterns: " + (p.natalAspects || "Not provided"),
-    "",
-    "── SHADOW & PERSONAL CONTEXT ──",
-    "Shadow themes: " + (Array.isArray(p.shadowThemes) ? p.shadowThemes.join(", ") : p.shadowThemes || "Not specified"),
-    "Shadow goal: " + (p.shadowGoal || "Not specified"),
-    "Shadow depth readiness: " + (p.shadowDepth || 5) + "/10",
-    "Childhood wound: " + (p.childhoodWound || "Not shared"),
-    "Chakra focus: " + (p.chakraFocus && p.chakraFocus.length ? p.chakraFocus.join(", ") : "Not specified"),
-    "Intentions: " + (p.goals || "Not specified"),
-    "══════════════════════════════════════════",
-    "",
-  ];
+  // ── Additional people numerology ──
+  const peopleData = (p.people || []).filter(p2 => p2.firstName && p2.bMonth && p2.bDay && p2.bYear).map(p2 => {
+    const m2 = Number(p2.bMonth), d2 = Number(p2.bDay), y2 = Number(p2.bYear);
+    const lp2 = numReduce(numReduce(m2,false) + numReduce(d2,false) + numReduce(digitSum(y2),false));
+    return { name: p2.firstName + (p2.lastName ? " " + p2.lastName : ""), lifePath: lp2, dob: p2.bMonth+"/"+p2.bDay+"/"+p2.bYear };
+  });
 
-  if (n.hasCurrent) {
-    lines.push("NAME EVOLUTION — BIRTH vs CURRENT:");
-    lines.push("Birth name: " + n.fullName);
-    lines.push("Current name: " + n.currentFull);
-    lines.push("Expression: " + n.expression + " → " + n.currentExpression + (n.expression === n.currentExpression ? " [unchanged]" : " [SHIFTED]"));
-    lines.push("Soul Urge:   " + n.soulUrge + " → " + n.currentSoulUrge + (n.soulUrge === n.currentSoulUrge ? " [unchanged]" : " [SHIFTED]"));
-    lines.push("Personality: " + formatNum(n.personality) + " → " + n.currentPersonality + (n.personality === n.currentPersonality ? " [unchanged]" : " [SHIFTED]"));
-    lines.push("");
-  }
+  const lines = [];
 
   if (tier === "soul-spark") {
-    lines.push("Generate ONLY these JSON fields: cosmicSnapshot, lifePath, expression, soulUrge, personalYear, chineseZodiac, soulMessage");
-    lines.push("STRICT LENGTH LIMITS — exceed these and the JSON will be rejected:");
+    lines.push("You are a numerologist trained in David A. Phillips' Complete Book of Numerology.");
+    lines.push("OUTPUT: Return ONLY a raw JSON object. No markdown, no backticks, no preamble. Start with { end with }. No newlines inside string values. Use single quotes inside strings, never double quotes.");
+    lines.push("");
+    lines.push("Person: " + name + " | DOB: " + p.bMonth+"/"+p.bDay+"/"+p.bYear);
+    lines.push("Life Path: " + formatNum(n.lifePath) + " | Expression: " + formatNum(n.expression) + " | Soul Urge: " + formatNum(n.soulUrge) + " | Personal Year: " + n.personalYear);
+    lines.push("");
+    lines.push("Return this JSON:");
     lines.push(JSON.stringify({
-      cosmicSnapshot: "2 sentences max. Theme + Life Path " + n.lifePath + " reference.",
-      lifePath: { number: formatNum(n.lifePath), title: "3-word title", essence: "1 sentence", reading: "3 sentences on soul purpose. Name " + name + ".", shadow: "1 sentence on ego trap" },
-      expression: { number: formatNum(n.expression), title: "3-word title", reading: "2 sentences on talents" },
-      soulUrge: { number: formatNum(n.soulUrge), title: "3-word title", reading: "2 sentences on inner desire" },
-      personalYear: { number: n.personalYear, reading: "2 sentences on Personal Year " + n.personalYear },
-      chineseZodiac: { sign: n.chinese.element + " " + n.chinese.animal, reading: "2 sentences" },
-      soulMessage: "4 sentences to " + name + ". End with 1 sentence of pure truth."
+      cosmicSnapshot: "2 vivid sentences capturing " + name + "'s Life Path " + formatNum(n.lifePath) + " energy and current Personal Year " + n.personalYear + " theme",
+      lifePath: { number: formatNum(n.lifePath), title: "3-word title", reading: "3 sentences on soul purpose and Phillips master number meaning if applicable", shadow: "1 sentence on the core ego trap" },
+      expression: { number: formatNum(n.expression), title: "3-word title", reading: "2 sentences on natural talents and destiny role" },
+      soulUrge: { number: formatNum(n.soulUrge), title: "3-word title", reading: "2 sentences on deepest heart desire" },
+      timing: "2 sentences on what Personal Year " + n.personalYear + " is calling for right now",
+      soulMessage: "3 sentences written directly to " + name + " — end with one irreducible truth"
     }));
-  } else {
-    lines.push("MANDATORY: Generate ALL JSON fields in the schema below. Every single field must contain real, specific content referencing the actual numbers and placements above. NEVER write placeholder text. NEVER leave a field as just a description of what it should contain. Write the actual reading.");
-    lines.push("VERIFY BEFORE WRITING: Soul Urge=" + formatNum(n.soulUrge) + ", Expression=" + formatNum(n.expression) + ", Personality=" + formatNum(n.personality) + ", Missing=" + (n.missing.join(",") || "none") + ". These are the ONLY correct values. Do not recalculate.");
-    lines.push(JSON.stringify({
-      cosmicSnapshot: "3 sentences. Weave Life Path " + n.lifePath + ", Personal Year " + n.personalYear + ", and dominant plane (" + n.dominantPlane + ") into a single thematic arc for " + name + ".",
-
-      numerology: {
-        lifePath: {
-          number: formatNum(n.lifePath),
-          title: "3-word evocative title",
-          essence: "1 sentence on soul blueprint",
-          reading: "4 sentences on purpose, gifts, soul contract. Use name " + name + ". Reference Phillips master number status if applicable.",
-          shadow: "2 sentences on the ego trap and unconscious pattern",
-          gifts: "1 sentence listing core gifts"
-        },
-        expression: { number: formatNum(n.expression), title: "3-word title", reading: "3 sentences on natural talents and destiny role", shadow: "1 sentence" },
-        soulUrge: { number: formatNum(n.soulUrge), title: "3-word title", reading: "3 sentences on deepest heart desire and soul fuel", shadow: "1 sentence" },
-        personality: { number: formatNum(n.personality), title: "3-word title", reading: "2 sentences on how the world perceives them" },
-        birthday: { number: formatNum(n.birthday), title: "2-word title", reading: "2 sentences on the special gift of this birthday" },
-        maturity: { number: formatNum(n.maturity), reading: "2 sentences on what this soul is growing into after age 45" },
-
-        bridgeNumbers: {
-          lifeExpBridge: n.bridgeLifeExp,
-          soulPersBridge: n.bridgeSoulPers,
-          reading: "3 sentences on what gaps these bridges reveal — what needs integration between outer purpose and inner world"
-        },
-
-        subconsciousSelf: {
-          number: n.subconsciousSelf,
-          reading: "2 sentences on how " + name + " responds under pressure and what instinctive tools they naturally draw on"
-        },
-
-        firstVowel: {
-          vowel: n.firstVowel,
-          reading: "2 sentences on how this first vowel (" + n.firstVowel + ") shapes the primary motivation and approach to life per Phillips"
-        },
-
-        intensityTable: {
-          peaks: n.intensityPeak,
-          absences: n.intensityAbsent,
-          reading: "3 sentences on the overemphasized energy patterns and what's missing from the name — what this creates in behavior and blind spots"
-        },
-
-        planesOfExpression: {
-          physical: n.planes.Physical,
-          mental: n.planes.Mental,
-          emotional: n.planes.Emotional,
-          intuitive: n.planes.Intuitive,
-          dominant: n.dominantPlane,
-          reading: "3 sentences on how this person processes and expresses life — are they driven by feeling, thinking, doing, or knowing? What does this distribution reveal about how they operate?"
-        },
-
-        arrowsOfPythagoras: {
-          present: n.arrowsPresent.length ? n.arrowsPresent : ["None"],
-          absent: n.arrowsMissing.length ? n.arrowsMissing : ["None"],
-          reading: "4 sentences weaving together the active arrows (strengths) and absent arrows (soul lessons) into a coherent picture of this person's energetic gifts and growth edges"
-        },
-
-        missing: {
-          numbers: n.missing,
-          reading: "2 sentences on the karmic lessons embedded in " + (n.missing.join(", ") || "none — a rare, complete set")
-        },
-
-        karmicDebts: n.karmicDebts.length ? n.karmicDebts.join(", ") : null,
-        karmicReading: n.karmicDebts.length ? "3 sentences on the karmic debt patterns of " + n.karmicDebts.join(", ") + " — origin, pattern, and path to resolution" : null,
-
-        challenges: {
-          sequence: n.challenges.join(" → "),
-          active: n.activeChallenge,
-          reading: "3 sentences on the 4-challenge arc and what the current challenge " + n.activeChallenge + " is demanding from " + name + " right now"
-        },
-
-        pinnacles: {
-          sequence: n.pinnacles.join(" → "),
-          active: n.activePinnacle,
-          reading: "3 sentences on the pinnacle arc — past peaks, current pinnacle " + n.activePinnacle + " and its theme, what's coming next"
-        },
-
-        timing: {
-          personalYear: n.personalYear,
-          personalMonth: n.personalMonth,
-          reading: "3 sentences on the convergence of Personal Year " + n.personalYear + " + Personal Month " + n.personalMonth + " + Pinnacle " + n.activePinnacle + " + Challenge " + n.activeChallenge + " — what is this exact moment calling for?"
-        }
-      },
-
-      astrology: {
-        sunReading: "3 sentences. " + (p.natalSun || n.sunSign) + " Sun — identity, vitality, conscious self. Cross-reference with Life Path " + n.lifePath,
-        moonReading: "3 sentences. " + (p.natalMoon || "Moon") + " Moon — emotional body, instinctive reactions, inner child, what the soul craves for nourishment",
-        risingReading: "3 sentences. " + (p.natalRising || "Rising") + " Rising — the mask, how this person enters rooms, first impressions, the body's lens on the world",
-        innerPlanets: "3 sentences. Mercury " + (p.natalMercury||"?") + " (mind/communication) + Venus " + (p.natalVenus||"?") + " (love/values) + Mars " + (p.natalMars||"?") + " (drive/desire) — how do these shape how " + name + " thinks, loves, and acts?",
-        socialPlanets: "2 sentences. Jupiter " + (p.natalJupiter||"?") + " (expansion/blessings) + Saturn " + (p.natalSaturn||"?") + " (structure/karma) — where does life open up and where does it demand mastery?",
-        outerPlanets: "2 sentences. Uranus " + (p.natalUranus||"?") + " + Neptune " + (p.natalNeptune||"?") + " + Pluto " + (p.natalPluto||"?") + " — generational soul signature and collective mission layer",
-        northNodeReading: "3 sentences. North Node " + (p.natalNorthNode||"?") + " / South Node " + (p.natalSouthNode||"?") + " — the soul's evolutionary direction and the comfortable past patterns to release",
-        chironReading: "3 sentences. Chiron " + (p.natalChiron||"?") + " — the core wound, how it shows up, and the master healer gift hidden inside it",
-        mc: p.natalHouse10 ? "2 sentences. MC " + p.natalHouse10 + " — public legacy, career calling, how the world is meant to know " + name : null,
-        ic: p.natalHouse4 ? "2 sentences. IC " + p.natalHouse4 + " — ancestral roots, private self, the foundation everything is built on" : null,
-        synthesis: "3 sentences weaving the whole chart into a unified soul story — what is the astrology saying in one clear voice?"
-      },
-
-      chineseZodiac: {
-        yearAnimal: n.chinese.element + " " + n.chinese.animal + " (" + n.chinese.polarity + ")",
-        innerAnimal: n.chinese.innerAnimal,
-        secretAnimal: n.chinese.secretAnimal,
-        fixedElement: n.chinese.fixedElement,
-        reading: "3 sentences on the Year animal's core nature, strengths, and challenges for " + name,
-        threeAnimals: "2 sentences weaving the year (public self), inner (emotional/private self), and secret (subconscious drive) animals into a three-layered portrait",
-        crossReference: "2 sentences. How does the " + n.chinese.element + " " + n.chinese.animal + " interact with Life Path " + n.lifePath + " and the " + n.dominantPlane + " dominant plane?"
-      },
-
-      shadowWork: {
-        coreWound: "3 sentences. Draw ONLY from the numbers (Life Path " + n.lifePath + ", missing " + (n.missing.join(",")||"none") + ", arrows), astrology, and ONLY what was explicitly shared in the form. Name the specific number or placement driving this pattern.",
-        origin: "2 sentences on likely origin — draw from the numerology and chart data. Only reference biographical details if they were explicitly shared in the form.",
-        theGold: "3 sentences on what integrating this shadow unlocks — name the specific superpower hidden in Life Path " + n.lifePath + " and the chart.",
-        soulInvitation: "2 sentences — what is life specifically inviting " + name + " to stop doing and start embodying, based on Personal Year " + n.personalYear + " and active Challenge " + n.activeChallenge + "?",
-        prompts: ["5 journal prompts. Each must reference specific data: a number, a placement, an arrow, or something explicitly shared. No generic prompts. Make each one crack something open for this specific soul."]
-      },
-
-      holisticSynthesis: {
-        corePattern: "4 sentences — the single thread running through Life Path " + n.lifePath + ", Expression " + n.expression + ", missing numbers, arrows, astrology, and Chinese zodiac. What is the universe asking of " + name + "?",
-        greatestGift: "3 sentences on the rarest most specific gift this combination produces",
-        deepestChallenge: "3 sentences on the recurring friction that shows up across ALL systems",
-        soulSignature: "1 unforgettable sentence that defines " + name + " at soul level",
-        thisChapter: "2 sentences — what is the specific invitation of Personal Year " + n.personalYear + " in Pinnacle " + n.activePinnacle + " right now?"
-      },
-
-      soulMessage: "5 sentences written directly to " + name + ". Weave Life Path " + n.lifePath + ", the arrows, the active timing, and what you most need them to hear. End with one sentence of irreducible truth.",
-
-      ...(n.hasCurrent ? { nameEvolution: {
-        birthName: n.fullName,
-        currentName: n.currentFull,
-        expressionShift: n.expression + " → " + n.currentExpression,
-        soulUrgeShift: n.soulUrge + " → " + n.currentSoulUrge,
-        personalityShift: n.personality + " → " + n.currentPersonality,
-        whatYouLeftBehind: "2 sentences",
-        whatYouSteppedInto: "2 sentences",
-        alignment: "2 sentences — was this name change soul-aligned expansion or a contraction?",
-        integration: "1 sentence on what to reclaim from the birth name while honoring the current name"
-      }} : {})
-    }));
+    return lines.join("\n");
   }
+
+  lines.push("You are a master numerologist trained in David A. Phillips' Complete Book of Numerology, a Chinese metaphysics scholar, and a shadow integration guide.");
+  lines.push("OUTPUT: Return ONLY a raw JSON object. No markdown, no backticks, no preamble. Start with { end with }. No newlines or literal line breaks inside string values. Use single quotes inside strings, never double quotes inside strings.");
+  lines.push("");
+  lines.push("VERIFY: Life Path=" + formatNum(n.lifePath) + " | Expression=" + formatNum(n.expression) + " | Soul Urge=" + formatNum(n.soulUrge) + " | Personality=" + formatNum(n.personality) + " | Missing=" + (n.missing.join(",") || "none") + ". Do not recalculate or override.");
+  lines.push("");
+  lines.push("PERSON: " + name + " | DOB: " + p.bMonth+"/"+p.bDay+"/"+p.bYear + " | Born: " + [p.bCity,p.bState,p.bCountry].filter(Boolean).join(", "));
+  lines.push("Full birth name: " + n.fullName);
+  if (n.hasCurrent) lines.push("Current name: " + n.currentFull);
+  lines.push("");
+  lines.push("NUMEROLOGY DATA:");
+  lines.push("Life Path: " + formatNum(n.lifePath) + (n.masterNumbers.includes(n.lifePath) ? " [MASTER NUMBER]" : ""));
+  lines.push("Expression: " + formatNum(n.expression) + " | Soul Urge: " + formatNum(n.soulUrge) + " | Personality: " + formatNum(n.personality));
+  lines.push("Birthday Number: " + formatNum(n.birthday) + " | Maturity Number: " + formatNum(n.maturity));
+  lines.push("Personal Year: " + n.personalYear + " | Personal Month: " + n.personalMonth + " | Personal Day: " + n.personalDay);
+  lines.push("Active Pinnacle: " + n.activePinnacle + " (Pinnacle " + n.activePinnacleNum + ") | Active Challenge: " + n.activeChallenge);
+  lines.push("Pinnacle sequence: " + n.pinnacles.join(" -> ") + " | Challenge sequence: " + n.challenges.join(" -> "));
+  lines.push("Bridge LP-Exp: " + n.bridgeLifeExp + " | Bridge SU-Pers: " + n.bridgeSoulPers);
+  lines.push("Subconscious Self: " + n.subconsciousSelf + "/9 | First Vowel: " + n.firstVowel);
+  lines.push("Missing numbers: " + (n.missing.join(", ") || "None — complete set") + " | Karmic debts: " + (n.karmicDebts.join(", ") || "None"));
+  lines.push("Intensity peaks: " + n.intensityPeak + " | Absent: " + n.intensityAbsent);
+  lines.push("Planes — Physical: " + n.planes.Physical + " Mental: " + n.planes.Mental + " Emotional: " + n.planes.Emotional + " Intuitive: " + n.planes.Intuitive + " | Dominant: " + n.dominantPlane);
+  lines.push("Arrows present: " + (n.arrowsPresent.length ? n.arrowsPresent.join(", ") : "None") + " | Absent: " + (n.arrowsMissing.length ? n.arrowsMissing.join(", ") : "None"));
+  lines.push("Chinese Zodiac: " + n.chinese.element + " " + n.chinese.animal + " (" + n.chinese.polarity + ") | Inner: " + n.chinese.innerAnimal + " | Secret: " + n.chinese.secretAnimal);
+  if (p.sunSign) lines.push("Sun Sign: " + p.sunSign);
+  lines.push("");
+  if (p.shadowThemes && p.shadowThemes.length) lines.push("Shadow themes selected: " + p.shadowThemes.join(", "));
+  if (p.childhoodWound) lines.push("Wound shared: " + p.childhoodWound);
+  if (p.shadowGoal) lines.push("Shadow goal: " + p.shadowGoal);
+  if (p.goals) lines.push("Intentions: " + p.goals);
+  if (peopleData.length) {
+    lines.push("");
+    lines.push("ADDITIONAL PEOPLE FOR COMPATIBILITY:");
+    peopleData.forEach(pd => lines.push(pd.name + " | DOB: " + pd.dob + " | Life Path: " + pd.lifePath));
+  }
+  lines.push("");
+  lines.push("Return this exact JSON structure with all fields populated with real content:");
+  lines.push(JSON.stringify({
+    cosmicSnapshot: "3 vivid sentences — weave Life Path " + formatNum(n.lifePath) + ", Personal Year " + n.personalYear + ", and dominant plane (" + n.dominantPlane + ") into the soul theme of this chapter for " + name,
+
+    lifePath: {
+      number: formatNum(n.lifePath),
+      title: "evocative 3-word title",
+      essence: "1 sentence soul contract",
+      reading: "5 sentences — Phillips depth on purpose, master number significance if applicable, how this Life Path operates, what it came to learn, and its highest expression in " + name + "'s life",
+      shadow: "2 sentences — the ego trap, the unconscious pattern, the shadow side of this Life Path",
+      gifts: "2 sentences listing the rarest gifts this Life Path carries"
+    },
+
+    expression: {
+      number: formatNum(n.expression),
+      title: "3-word title",
+      reading: "3 sentences on natural talents, destiny role, and how this Expression shapes the outer life",
+      shadow: "1 sentence on where this energy creates friction"
+    },
+
+    soulUrge: {
+      number: formatNum(n.soulUrge),
+      title: "3-word title",
+      reading: "3 sentences on the deepest heart desire, soul fuel, what this number craves to feel whole",
+      shadow: "1 sentence on what this Soul Urge looks like when unfulfilled"
+    },
+
+    personality: {
+      number: formatNum(n.personality),
+      title: "3-word title",
+      reading: "2 sentences on how the world perceives " + name + " before they speak, and how the Personality mask relates to the Soul Urge beneath it"
+    },
+
+    birthday: {
+      number: formatNum(n.birthday),
+      title: "2-word title",
+      reading: "2 sentences on the special talent and gift embedded in this birthday number per Phillips"
+    },
+
+    maturity: {
+      number: formatNum(n.maturity),
+      reading: "2 sentences on what " + name + " is growing toward after age 45 — the final flowering"
+    },
+
+    bridgeNumbers: {
+      reading: "3 sentences on Bridge " + n.bridgeLifeExp + " (Life Path to Expression) and Bridge " + n.bridgeSoulPers + " (Soul Urge to Personality) — what gaps need integration, what this reveals about inner vs outer misalignment"
+    },
+
+    subconsciousSelf: {
+      number: n.subconsciousSelf,
+      reading: "2 sentences on how " + name + " responds instinctively under pressure with " + n.subconsciousSelf + "/9 active responses"
+    },
+
+    firstVowel: {
+      vowel: n.firstVowel,
+      reading: "2 sentences on how the first vowel " + n.firstVowel + " shapes the primary motivation and approach to all of life"
+    },
+
+    intensityTable: {
+      peaks: n.intensityPeak,
+      absences: n.intensityAbsent,
+      reading: "3 sentences on overemphasized energies, what the absent numbers create as blind spots, and how this intensity pattern plays out"
+    },
+
+    planesOfExpression: {
+      distribution: "Physical=" + n.planes.Physical + " Mental=" + n.planes.Mental + " Emotional=" + n.planes.Emotional + " Intuitive=" + n.planes.Intuitive,
+      dominant: n.dominantPlane,
+      reading: "3 sentences on how this distribution shapes the way " + name + " processes life — their primary intelligence, what comes naturally, and what requires conscious cultivation"
+    },
+
+    arrowsOfPythagoras: {
+      present: n.arrowsPresent.length ? n.arrowsPresent.join(", ") : "None",
+      absent: n.arrowsMissing.length ? n.arrowsMissing.join(", ") : "None",
+      reading: "4 sentences — weave the active arrows (instinctive strengths) and absent arrows (the gifts earned through conscious effort) into a coherent picture of " + name + "'s energetic architecture"
+    },
+
+    missingNumbers: {
+      numbers: n.missing.join(", ") || "None — complete set",
+      reading: "3 sentences on the karmic lesson of missing " + (n.missing.join(" and ") || "no numbers") + " — what the soul came to consciously develop this lifetime"
+    },
+
+    ...(n.karmicDebts.length ? { karmicDebts: { debts: n.karmicDebts.join(", "), reading: "2 sentences on the karmic debt pattern and path to resolution" } } : {}),
+
+    timing: {
+      personalYear: n.personalYear,
+      personalMonth: n.personalMonth,
+      activePinnacle: n.activePinnacle,
+      activeChallenge: n.activeChallenge,
+      reading: "4 sentences on the convergence of Personal Year " + n.personalYear + " + Personal Month " + n.personalMonth + " + Pinnacle " + n.activePinnacle + " + Challenge " + n.activeChallenge + " — what is this exact season asking of " + name + "?"
+    },
+
+    pinnacles: {
+      sequence: n.pinnacles.join(" -> "),
+      active: n.activePinnacle,
+      reading: "2 sentences on the pinnacle arc — what has been and what the current pinnacle " + n.activePinnacle + " is here to teach"
+    },
+
+    chineseZodiac: {
+      yearAnimal: n.chinese.element + " " + n.chinese.animal,
+      innerAnimal: n.chinese.innerAnimal,
+      secretAnimal: n.chinese.secretAnimal,
+      reading: "3 sentences on the three-layer animal portrait — year animal (public self), inner animal (private nature), secret animal (subconscious drive) and how they work together"
+    },
+
+    ...(p.sunSign ? { sunSign: { sign: p.sunSign, reading: "2 sentences on how " + p.sunSign + " Sun energy interplays with Life Path " + formatNum(n.lifePath) + " — where they harmonize or create productive tension" } } : {}),
+
+    shadowWork: {
+      coreWound: "3 sentences identifying the wound thread running through the numerology — name the specific numbers driving this pattern. Only reference biographical details explicitly shared above.",
+      theGold: "3 sentences on what integrating this shadow unlocks — name the specific superpower hidden in Life Path " + formatNum(n.lifePath) + " and the missing numbers",
+      soulInvitation: "2 sentences — what is Personal Year " + n.personalYear + " and Challenge " + n.activeChallenge + " specifically inviting " + name + " to stop doing and start embodying",
+      prompts: "5 shadow journal prompts, each referencing a specific number or placement. Separate with | character. No generic prompts."
+    },
+
+    ...(n.hasCurrent ? { nameEvolution: {
+      birthName: n.fullName,
+      currentName: n.currentFull,
+      shifts: "Expression " + formatNum(n.expression) + " to " + formatNum(n.currentExpression) + ", Soul Urge " + formatNum(n.soulUrge) + " to " + formatNum(n.currentSoulUrge),
+      reading: "3 sentences on what shifted numerologically with this name change and whether it represents expansion or contraction of soul alignment"
+    }} : {}),
+
+    ...(peopleData.length ? { compatibility: peopleData.map(pd => ({
+      name: pd.name,
+      lifePath: pd.lifePath,
+      reading: "3 sentences on the Life Path " + formatNum(n.lifePath) + " and Life Path " + pd.lifePath + " dynamic — natural resonance, friction points, and what this connection is here to teach both souls"
+    }))} : {}),
+
+    holisticSynthesis: {
+      corePattern: "4 sentences — the single thread running through all the numbers. What is the universe asking of " + name + "?",
+      greatestGift: "2 sentences on the rarest gift this specific combination produces",
+      soulSignature: "1 unforgettable sentence that defines " + name + " at soul level"
+    },
+
+    soulMessage: "5 sentences written directly to " + name + ". Weave Life Path " + formatNum(n.lifePath) + ", the timing, and the shadow invitation. End with one sentence of irreducible truth."
+  }));
 
   return lines.join("\n");
 }
+
 
 // ─── API ──────────────────────────────────────────────────
 async function generateReading(p, tier, onProgress) {
@@ -609,11 +543,10 @@ function readingToText(r, name) {
   if (r.soulUrge) lines.push("SOUL URGE " + r.soulUrge.number + "\n" + (r.soulUrge.reading || "") + "\n");
   if (r.personalYear) lines.push("PERSONAL YEAR " + r.personalYear.number + "\n" + (r.personalYear.reading || "") + "\n");
   if (r.chineseZodiac) lines.push("CHINESE ZODIAC — " + r.chineseZodiac.sign + "\n" + (r.chineseZodiac.reading || "") + "\n");
-  if (r.astrology) {
-    lines.push("ASTROLOGY\n");
-    ["sunReading","moonReading","risingReading","innerPlanets","northNodeReading","chironReading","synthesis"].forEach(k => {
-      if (r.astrology[k]) lines.push(r.astrology[k] + "\n");
-    });
+  if (r.sunSign) lines.push("SUN SIGN — " + (r.sunSign.sign||"") + "\n" + (r.sunSign.reading||"") + "\n");
+  if (r.compatibility && r.compatibility.length) {
+    lines.push("COMPATIBILITY\n");
+    r.compatibility.forEach(c => lines.push(c.name + " (Life Path " + c.lifePath + "):\n" + c.reading + "\n"));
   }
   if (r.shadowWork) {
     lines.push("SHADOW WORK\n" + (r.shadowWork.coreWound || "") + "\n" + (r.shadowWork.theGold || "") + "\n");
@@ -650,7 +583,7 @@ const TIERS = [
     includes: ["Life Path · Expression · Soul Urge", "Personal Year", "Chinese Zodiac", "Soul Message"] },
   { id: "cosmic-self", name: "Cosmic Self", price: "$97", color: "#9B7ED4", popular: true,
     desc: "Complete Phillips system · Natal chart · Shadow work · Holistic synthesis",
-    includes: ["Everything in Soul Spark", "All Phillips depth numbers", "Arrows of Pythagoras", "Natal astrology deep dive", "Shadow Work + 5 Prompts", "Holistic Synthesis"] },
+    includes: ["Everything in Soul Spark", "All Phillips depth numbers", "Arrows of Pythagoras", "Chinese Zodiac 3-layer portrait", "Shadow Work + 5 prompts", "Holistic Synthesis + Soul Message"] },
   { id: "soul-connections", name: "Soul Connections", price: "$197", color: "#D47E9B",
     desc: "Full reading for you + one other + compatibility",
     includes: ["Full Cosmic Self for both", "Compatibility analysis", "Soul contract reading", "Shared shadow patterns"] },
@@ -705,16 +638,10 @@ const emptyP = () => ({
   currentFirst:"", currentMiddle:"", currentLast:"",
   bMonth:"", bDay:"", bYear:"", timeKnown:"", bHour:"", bMinute:"",
   bCity:"", bState:"", bCountry:"",
-  natalSunDeg:"", natalMoonDeg:"", natalRisingDeg:"",
-  natalSun:"", natalMoon:"", natalRising:"", natalMercury:"", natalVenus:"", natalMars:"",
-  natalJupiter:"", natalSaturn:"", natalUranus:"", natalNeptune:"", natalPluto:"",
-  natalChiron:"", natalNorthNode:"", natalSouthNode:"",
-  natalHouse1:"", natalHouse4:"", natalHouse7:"", natalHouse10:"",
-  natalPartFortune:"", natalVertex:"",
-  natalAspects:"", natalSource:"",
-  shadowThemes:[], recurringPatterns:"", childhoodWound:"", shadowDepth:5, shadowGoal:"",
-  meditationFocus:[], meditationExp:"", currentPractice:"", chakraFocus:[], freqInterest:[], binauralInterest:[],
-  goals:""
+  sunSign:"",
+  shadowThemes:[], childhoodWound:"", shadowDepth:5, shadowGoal:"",
+  goals:"",
+  people:[{ firstName:"", lastName:"", bMonth:"", bDay:"", bYear:"" }]
 });
 
 // ─── UI PRIMITIVES ────────────────────────────────────────
@@ -885,21 +812,11 @@ function ReadingView({ reading: r, name, onEmail, emailSt }) {
       </div>}
     </Sec>}
 
-    {r.astrology && <Sec icon="🌙" title="Astrology — Natal Chart Reading" color="#7EC4D4">
-      <InfoBlock label="☀️ Sun — Identity & Purpose" text={r.astrology.sunReading} color="#7EC4D4" />
-      <InfoBlock label="🌙 Moon — Emotional World" text={r.astrology.moonReading} color="#7EC4D4" />
-      <InfoBlock label="↑ Rising — How You Appear" text={r.astrology.risingReading} color="#7EC4D4" />
-      <InfoBlock label="☿ ♀ ♂ Inner Planets" text={r.astrology.innerPlanets} color="#7EC4D4" />
-      <InfoBlock label="♃ ♄ Social Planets" text={r.astrology.socialPlanets} color="#7EC4D4" />
-      <InfoBlock label="♅ ♆ ♇ Outer Planets — Generational" text={r.astrology.outerPlanets} color="#9B7ED4" />
-      <InfoBlock label="☊ North Node / South Node — Soul Direction" text={r.astrology.northNodeReading} color="#C8A96E" />
-      <InfoBlock label="⚷ Chiron — The Sacred Wound" text={r.astrology.chironReading} color="#D47E9B" />
-      <InfoBlock label="MC — Public Calling" text={r.astrology.mc} color="#7EC4D4" />
-      <InfoBlock label="IC — Ancestral Foundation" text={r.astrology.ic} color="#7EC4D4" />
-      {r.astrology.synthesis && <div style={{ marginTop:12, padding:"12px 14px", background:"rgba(126,196,212,.05)", border:"1px solid rgba(126,196,212,.18)", borderRadius:6 }}>
-        <div style={{ fontFamily:"'Cinzel',serif", fontSize:9, letterSpacing:".14em", textTransform:"uppercase", color:"#7EC4D4", marginBottom:6 }}>✦ Chart Synthesis</div>
-        <p style={{ fontSize:13, color:"rgba(255,255,255,.72)", lineHeight:1.88 }}>{r.astrology.synthesis}</p>
-      </div>}
+    {r.sunSign && <Sec icon="☀️" title={"Sun Sign — " + r.sunSign.sign} color="#7EC4D4">
+      <InfoBlock label={r.sunSign.sign + " Sun"} text={r.sunSign.reading} color="#7EC4D4" />
+    </Sec>}
+    {r.compatibility && r.compatibility.length > 0 && <Sec icon="✦" title="Compatibility — Numerology Relationship Reading" color="#9B7ED4">
+      {r.compatibility.map((c, i) => <Card key={i} title={"Life Path " + c.lifePath + " — " + c.name} text={c.reading} color="#9B7ED4" />)}
     </Sec>}
 
     {r.chineseZodiac && <Sec icon="🐉" title={"Chinese Zodiac — Three Animal System"} color="#D47E9B">
@@ -1106,6 +1023,7 @@ export default function App() {
             <TI l="Preferred Name" v={person.preferredName} s={v => upd({preferredName:v})} p="What you go by" />
 
             <GD label="Full Legal Birth Name" />
+            <div style={{fontSize:11,color:"rgba(255,255,255,.35)",marginBottom:10,fontStyle:"italic",lineHeight:1.7}}>Your birth certificate name is the foundation of your numerology. Every letter carries a frequency. Middle name included if you have one.</div>
             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:10 }}>
               <TI l="First Name" v={person.legalFirst} s={v => upd({legalFirst:v})} p="Birth certificate" r />
               <TI l="Middle Name" v={person.legalMiddle} s={v => upd({legalMiddle:v})} p="Leave blank if none" />
@@ -1119,8 +1037,8 @@ export default function App() {
               <TS l="Year" v={person.bYear} s={v => upd({bYear:v})} opts={YEARS} r />
             </div>
 
-            <GD label="Time & Place of Birth — Unlocks Rising Sign + Secret Animal" />
-            <div style={{ fontSize:11, color:"rgba(255,255,255,.35)", marginBottom:12, fontStyle:"italic" }}>Birth time calculates your Rising sign and Chinese Secret Animal. If unknown, leave blank.</div>
+            <GD label="Time & Place of Birth — For Chinese Zodiac Secret Animal" />
+            <div style={{ fontSize:11, color:"rgba(255,255,255,.35)", marginBottom:12, fontStyle:"italic" }}>Birth time unlocks your Chinese Secret Animal (subconscious drive). If unknown, leave blank.</div>
             <TS l="Birth Time Known?" v={person.timeKnown} s={v => upd({timeKnown:v})} opts={[{v:"exact",l:"Yes — exact"},{v:"approximate",l:"Approximate"},{v:"unknown",l:"Don't know"}]} />
             {(person.timeKnown === "exact" || person.timeKnown === "approximate") && <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
               <TS l="Hour" v={person.bHour} s={v => upd({bHour:v})} opts={Array.from({length:24},(_,h)=>({v:String(h).padStart(2,"0"),l:h===0?"12:00 AM":h<12?h+":00 AM":h===12?"12:00 PM":(h-12)+":00 PM"}))} />
@@ -1128,9 +1046,13 @@ export default function App() {
             </div>}
             <div style={{ display:"grid", gridTemplateColumns:"2fr 1fr 1fr", gap:10 }}>
               <TI l="City of Birth" v={person.bCity} s={v => upd({bCity:v})} p="e.g. Dallas" />
-              <TI l="State" v={person.bState} s={v => upd({bState:v})} p="TX" />
+              <TI l="State / Region" v={person.bState} s={v => upd({bState:v})} p="TX" />
               <TI l="Country" v={person.bCountry} s={v => upd({bCountry:v})} p="USA" />
             </div>
+
+            <GD label="Sun Sign" />
+            <div style={{fontSize:11,color:"rgba(255,255,255,.35)",marginBottom:10,fontStyle:"italic"}}>Your Sun sign adds the solar layer to your numerology portrait.</div>
+            <TS l="Sun Sign" v={person.sunSign} s={v => upd({sunSign:v})} opts={ZODIAC} />
 
             {isFull && <>
               <GD label="Current Name (if different from birth)" />
@@ -1142,71 +1064,42 @@ export default function App() {
                 <TI l="Current Middle Name" v={person.currentMiddle} s={v => upd({currentMiddle:v})} p="If applicable" />
                 <TI l="Current Last Name" v={person.currentLast} s={v => upd({currentLast:v})} p="Married / chosen name" />
               </div>
+            </>}
 
-              <GD label="Natal Chart Placements — Optional but Powerful" />
+            <GD label="Shadow Work" />
+            <p style={{fontSize:12,color:"rgba(255,255,255,.32)",marginBottom:14,fontStyle:"italic",lineHeight:1.8}}>🌑 The shadow is not what is wrong with you — it is what has been unwitnessed. Your selections shape the depth of this section.</p>
+            <MP label="Shadow themes active in your life right now" items={SHADOW_THEMES} selected={person.shadowThemes} onChange={v => upd({shadowThemes:v})} color="#9B7ED4" />
+            <TTA l="Earliest wound that still echoes — Optional" v={person.childhoodWound} s={v => upd({childhoodWound:v})} p="A few words is enough. Only what feels safe to share." rows={2} />
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:16,alignItems:"end"}}>
+              <TS l="Primary shadow goal" v={person.shadowGoal} s={v => upd({shadowGoal:v})} opts={[{v:"",l:"— Select —"},{v:"patterns",l:"Understand repeating patterns"},{v:"release",l:"Release what no longer serves"},{v:"child",l:"Heal the inner child"},{v:"reclaim",l:"Reclaim disowned parts"},{v:"integrate",l:"Integrate light and shadow"},{v:"beginning",l:"Just beginning"}]} />
+              <div>
+                <Lbl c={"Depth readiness: " + (person.shadowDepth||5) + " / 10"} />
+                <p style={{fontSize:10,color:"rgba(255,255,255,.25)",marginBottom:8,fontStyle:"italic"}}>Calibrates tone of shadow section</p>
+                <input type="range" min={1} max={10} value={person.shadowDepth||5} onChange={e => upd({shadowDepth:Number(e.target.value)})} style={{width:"100%",accentColor:"#9B7ED4"}} />
+              </div>
+            </div>
 
-
-              <div style={{fontFamily:"'Cinzel',serif",fontSize:9,letterSpacing:".14em",color:"rgba(200,169,110,.5)",textTransform:"uppercase",marginBottom:10}}>Personal Planets</div>
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
-                <TS l="Sun Sign" v={person.natalSun} s={v => upd({natalSun:v})} opts={ZODIAC} />
-                <TS l="Moon Sign" v={person.natalMoon} s={v => upd({natalMoon:v})} opts={ZODIAC} />
-                <TS l="Rising / Ascendant" v={person.natalRising} s={v => upd({natalRising:v})} opts={ZODIAC} />
-              </div>
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:4}}>
-                <TI l="Sun Degree (optional)" v={person.natalSunDeg} s={v => upd({natalSunDeg:v})} p="e.g. 20" />
-                <TI l="Moon Degree (optional)" v={person.natalMoonDeg} s={v => upd({natalMoonDeg:v})} p="e.g. 29 = anaretic" />
-                <TI l="Rising Degree (optional)" v={person.natalRisingDeg} s={v => upd({natalRisingDeg:v})} p="e.g. 13" />
-              </div>
-              <div style={{fontSize:10,color:"rgba(255,255,255,.25)",marginBottom:12,fontStyle:"italic"}}>Degree shown on astro.com next to each placement — e.g. "Moon 29°55' Taurus" → enter 29. The 29th degree (anaretic) is especially significant.</div>
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
-                <TS l="Mercury" v={person.natalMercury} s={v => upd({natalMercury:v})} opts={ZODIAC} />
-                <TS l="Venus" v={person.natalVenus} s={v => upd({natalVenus:v})} opts={ZODIAC} />
-                <TS l="Mars" v={person.natalMars} s={v => upd({natalMars:v})} opts={ZODIAC} />
-              </div>
-              <div style={{fontFamily:"'Cinzel',serif",fontSize:9,letterSpacing:".14em",color:"rgba(126,196,212,.5)",textTransform:"uppercase",margin:"10px 0"}}>Social & Outer Planets</div>
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
-                <TS l="Jupiter" v={person.natalJupiter} s={v => upd({natalJupiter:v})} opts={ZODIAC} />
-                <TS l="Saturn" v={person.natalSaturn} s={v => upd({natalSaturn:v})} opts={ZODIAC} />
-                <TS l="Uranus" v={person.natalUranus} s={v => upd({natalUranus:v})} opts={ZODIAC} />
-              </div>
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
-                <TS l="Neptune" v={person.natalNeptune} s={v => upd({natalNeptune:v})} opts={ZODIAC} />
-                <TS l="Pluto" v={person.natalPluto} s={v => upd({natalPluto:v})} opts={ZODIAC} />
-                <TS l="Chiron" v={person.natalChiron} s={v => upd({natalChiron:v})} opts={ZODIAC} />
-              </div>
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-                <TS l="North Node" v={person.natalNorthNode} s={v => upd({natalNorthNode:v})} opts={ZODIAC} />
-                <TS l="South Node" v={person.natalSouthNode} s={v => upd({natalSouthNode:v})} opts={ZODIAC} />
-              </div>
-              <GD label="Key House Cusps — Optional" />
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:10}}>
-                <TS l="1st House (Self)" v={person.natalHouse1} s={v => upd({natalHouse1:v})} opts={ZODIAC} />
-                <TS l="4th House (Roots)" v={person.natalHouse4} s={v => upd({natalHouse4:v})} opts={ZODIAC} />
-                <TS l="7th House (Partners)" v={person.natalHouse7} s={v => upd({natalHouse7:v})} opts={ZODIAC} />
-                <TS l="10th House (Career)" v={person.natalHouse10} s={v => upd({natalHouse10:v})} opts={ZODIAC} />
-              </div>
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-                <TS l="Part of Fortune" v={person.natalPartFortune} s={v => upd({natalPartFortune:v})} opts={ZODIAC} />
-                <TS l="Vertex (Fated Encounters)" v={person.natalVertex} s={v => upd({natalVertex:v})} opts={ZODIAC} />
-              </div>
-              <TTA l="Major Aspects or Chart Patterns — Optional" v={person.natalAspects} s={v => upd({natalAspects:v})} p="e.g. Sun conjunct Saturn, T-square in cardinal signs, stellium in 8th house, grand trine…" rows={2} />
-
-              <GD label="Shadow Work" />
-              <p style={{fontSize:12,color:"rgba(255,255,255,.32)",marginBottom:14,fontStyle:"italic",lineHeight:1.8}}>🌑 The shadow is not what is wrong with you — it is what has been unwitnessed. Your selections shape the depth of this section.</p>
-              <MP label="Shadow themes active in your life right now" items={SHADOW_THEMES} selected={person.shadowThemes} onChange={v => upd({shadowThemes:v})} color="#9B7ED4" />
-              <TTA l="Earliest wound that still echoes — Optional" v={person.childhoodWound} s={v => upd({childhoodWound:v})} p="A few words is enough. Only what feels safe to share." rows={2} />
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:16,alignItems:"end"}}>
-                <TS l="Primary shadow goal" v={person.shadowGoal} s={v => upd({shadowGoal:v})} opts={[{v:"",l:"— Select —"},{v:"patterns",l:"Understand repeating patterns"},{v:"release",l:"Release what no longer serves"},{v:"child",l:"Heal the inner child"},{v:"reclaim",l:"Reclaim disowned parts"},{v:"integrate",l:"Integrate light and shadow"},{v:"beginning",l:"Just beginning"}]} />
-                <div>
-                  <Lbl c={"Depth readiness: " + (person.shadowDepth||5) + " / 10"} />
-                  <p style={{fontSize:10,color:"rgba(255,255,255,.25)",marginBottom:8,fontStyle:"italic"}}>Calibrates tone of shadow section</p>
-                  <input type="range" min={1} max={10} value={person.shadowDepth||5} onChange={e => upd({shadowDepth:Number(e.target.value)})} style={{width:"100%",accentColor:"#9B7ED4"}} />
+            {isFull && <>
+              <GD label="Additional People — Relationship & Compatibility Layer" />
+              <p style={{fontSize:11,color:"rgba(255,255,255,.32)",marginBottom:14,fontStyle:"italic",lineHeight:1.8}}>Add up to 2 people (partner, child, parent, close friend) to receive a numerology compatibility layer in your reading. First name + DOB is enough.</p>
+              {(person.people||[]).map((p2, i) => (
+                <div key={i} style={{background:"rgba(155,126,212,.04)",border:"1px solid rgba(155,126,212,.15)",borderRadius:7,padding:"14px 16px",marginBottom:12}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+                    <div style={{fontFamily:"'Cinzel',serif",fontSize:10,letterSpacing:".14em",color:"#9B7ED4",textTransform:"uppercase"}}>Person {i+1}</div>
+                    {i > 0 && <button onClick={() => upd({people:(person.people||[]).filter((_,j)=>j!==i)})} style={{background:"transparent",border:"none",color:"rgba(255,255,255,.25)",cursor:"pointer",fontSize:11}}>✕ Remove</button>}
+                  </div>
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
+                    <TI l="First Name" v={p2.firstName} s={v => { const arr=[...(person.people||[])]; arr[i]={...arr[i],firstName:v}; upd({people:arr}); }} p="Name" />
+                    <TI l="Last Name (optional)" v={p2.lastName} s={v => { const arr=[...(person.people||[])]; arr[i]={...arr[i],lastName:v}; upd({people:arr}); }} p="Surname" />
+                  </div>
+                  <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 2fr",gap:10}}>
+                    <TS l="Birth Month" v={p2.bMonth} s={v => { const arr=[...(person.people||[])]; arr[i]={...arr[i],bMonth:v}; upd({people:arr}); }} opts={MONTHS} />
+                    <TS l="Day" v={p2.bDay} s={v => { const arr=[...(person.people||[])]; arr[i]={...arr[i],bDay:v}; upd({people:arr}); }} opts={DAYS} />
+                    <TS l="Year" v={p2.bYear} s={v => { const arr=[...(person.people||[])]; arr[i]={...arr[i],bYear:v}; upd({people:arr}); }} opts={YEARS} />
+                  </div>
                 </div>
-              </div>
-
-              <GD label="Energetic Focus" />
-              <p style={{fontSize:11,color:"rgba(255,255,255,.32)",marginBottom:10,fontStyle:"italic"}}>Select chakra centers calling for attention</p>
-              <ChakraPicker selected={person.chakraFocus} onChange={v => upd({chakraFocus:v})} />
+              ))}
+              {(person.people||[]).length < 2 && <button onClick={() => upd({people:[...(person.people||[]),{firstName:"",lastName:"",bMonth:"",bDay:"",bYear:""}]})} style={{background:"transparent",border:"1px dashed rgba(155,126,212,.35)",color:"rgba(155,126,212,.6)",fontFamily:"'Cinzel',serif",fontSize:10,letterSpacing:".14em",textTransform:"uppercase",padding:"10px 20px",borderRadius:5,cursor:"pointer",width:"100%",marginBottom:4}}>+ Add Another Person</button>}
             </>}
 
             <GD label="Intentions" />
