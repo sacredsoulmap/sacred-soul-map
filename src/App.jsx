@@ -710,7 +710,7 @@ export default function App() {
   const sendMail = async () => {
     const name = person.preferredName || person.legalFirst || "Friend";
     setEmailSt("sending");
-    try { await sendEmail(email, name, tier?.name || "Cosmic", reading); setEmailSt("sent"); }
+    try { await sendEmail(email, name, tier && tier.name || "Cosmic", reading); setEmailSt("sent"); }
     catch (e) { console.error(e); setEmailSt("error"); }
   };
 
@@ -957,8 +957,8 @@ export default function App() {
         {step === "results" && reading && <div style={{ animation:"fu .6s ease both" }}>
           <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:22, flexWrap:"wrap", gap:10 }}>
             <div>
-              <div style={{ fontFamily:"'Cinzel',serif", fontSize:9, letterSpacing:".2em", color:tier?.color, textTransform:"uppercase", marginBottom:3 }}>Your Reading</div>
-              <h2 style={{ fontFamily:"'Cinzel Decorative',serif", fontSize:19, color:"#fff" }}>{tier?.name} — {person.preferredName || person.legalFirst || "Your Reading"}</h2>
+              <div style={{ fontFamily:"'Cinzel',serif", fontSize:9, letterSpacing:".2em", color:(tier && tier.color), textTransform:"uppercase", marginBottom:3 }}>Your Reading</div>
+              <h2 style={{ fontFamily:"'Cinzel Decorative',serif", fontSize:19, color:"#fff" }}>{tier && tier.name} — {person.preferredName || person.legalFirst || "Your Reading"}</h2>
             </div>
             <button onClick={reset} style={{ background:"transparent", border:"1px solid rgba(255,255,255,.1)", color:"rgba(255,255,255,.38)", padding:"7px 13px", borderRadius:4, cursor:"pointer", fontSize:11, fontFamily:"'Cinzel',serif" }}>← New Reading</button>
           </div>
