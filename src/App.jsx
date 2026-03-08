@@ -35,6 +35,13 @@ function nameSum(name, filter) {
   }, 0);
 }
 
+function reduce(n, keepMaster = true) {
+  if (keepMaster && (n === 11 || n === 22 || n === 33)) return n;
+  if (n < 10) return n;
+  const sum = String(n).split("").reduce((s, d) => s + Number(d), 0);
+  return reduce(sum, keepMaster);
+}
+
 function digitSum(str) {
   return String(str).split("").reduce((s, d) => s + Number(d), 0);
 }
