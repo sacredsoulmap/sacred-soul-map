@@ -330,12 +330,57 @@ const DAYS = Array.from({length:31}, (_,i) => ({ v: String(i+1), l: String(i+1) 
 const CY = new Date().getFullYear();
 const YEARS = Array.from({length:110}, (_,i) => ({ v: String(CY-i), l: String(CY-i) }));
 const ZODIAC = [{v:"",l:"— Select —"},{v:"Aries",l:"♈ Aries"},{v:"Taurus",l:"♉ Taurus"},{v:"Gemini",l:"♊ Gemini"},{v:"Cancer",l:"♋ Cancer"},{v:"Leo",l:"♌ Leo"},{v:"Virgo",l:"♍ Virgo"},{v:"Libra",l:"♎ Libra"},{v:"Scorpio",l:"♏ Scorpio"},{v:"Sagittarius",l:"♐ Sagittarius"},{v:"Capricorn",l:"♑ Capricorn"},{v:"Aquarius",l:"♒ Aquarius"},{v:"Pisces",l:"♓ Pisces"}];
+const HRS = Array.from({length:24},(_,h)=>({v:String(h).padStart(2,"0"),l:h===0?"12:00 AM":h<12?h+":00 AM":h===12?"12:00 PM":(h-12)+":00 PM"}));
+const MINS = ["00","05","10","15","20","25","30","35","40","45","50","55"].map(m=>({v:m,l:":"+m}));
+const SHADOW_THEMES = ["Abandonment & fear of being left","Worthiness & not feeling enough","Control & trust issues","People-pleasing & losing self","Anger & unexpressed emotion","Scarcity & money wounds","Intimacy avoidance","Perfectionism & fear of failure","Visibility fear & playing small","Grief & unprocessed loss","Codependency & enmeshment","Identity confusion","Generational & ancestral patterns","Self-sabotage & repeating cycles","Shame & inner critic","Boundary issues"];
+const MED_FOCUS = [{id:"inner-child",label:"Inner Child Healing",icon:"🌱"},{id:"shadow",label:"Shadow Integration",icon:"🌑"},{id:"nervous",label:"Nervous System Regulation",icon:"🌊"},{id:"grief",label:"Grief & Release",icon:"💧"},{id:"worth",label:"Self-Worth",icon:"☀️"},{id:"abundance",label:"Abundance",icon:"✨"},{id:"purpose",label:"Purpose & Direction",icon:"🧭"},{id:"relationships",label:"Relationship Healing",icon:"💞"},{id:"ancestral",label:"Ancestral Clearing",icon:"🌿"},{id:"intuition",label:"Intuition Development",icon:"🔮"},{id:"somatic",label:"Somatic & Body",icon:"🌺"},{id:"sleep",label:"Sleep & Restoration",icon:"🌙"}];
+const SOLFEGGIO = ["174 Hz — Foundation & Grounding","285 Hz — Cellular Restoration","396 Hz — Release Guilt & Fear","417 Hz — Facilitate Change","432 Hz — Natural Harmony","528 Hz — Love & DNA Repair","639 Hz — Heal Relationships","741 Hz — Intuition & Expression","852 Hz — Third Eye Opening","963 Hz — Crown Activation"];
+const BINAURAL = ["Delta (0.5–4 Hz) — Deep Healing & Sleep","Theta (4–8 Hz) — Shadow Work & Inner Child","Alpha (8–14 Hz) — Relaxed Daily Meditation","Beta (14–30 Hz) — Active Focus & Processing","Gamma (30–100 Hz) — Higher Consciousness"];
+const CHAKRAS = [{name:"Root",color:"#C0392B",desc:"Safety · Grounding"},{name:"Sacral",color:"#E67E22",desc:"Creativity · Emotion"},{name:"Solar Plexus",color:"#F1C40F",desc:"Power · Identity"},{name:"Heart",color:"#27AE60",desc:"Love · Connection"},{name:"Throat",color:"#2980B9",desc:"Expression · Truth"},{name:"Third Eye",color:"#8E44AD",desc:"Intuition · Vision"},{name:"Crown",color:"#BDC3C7",desc:"Oneness · Purpose"}];
+
+function MP({label, items, selected, onChange, color="#9B7ED4", cols=2}) {
+  return <div style={{marginBottom:18}}>
+    {label && <Lbl c={label} />}
+    <div style={{display:"grid",gridTemplateColumns:"repeat("+cols+",1fr)",gap:6}}>
+      {items.map(item => {
+        const val = typeof item === "string" ? item : (item.id || item);
+        const lbl = typeof item === "string" ? item : (item.label || item.id);
+        const icon = item.icon || null;
+        const on = selected.includes(val);
+        return <div key={val} onClick={() => onChange(on ? selected.filter(x => x !== val) : [...selected, val])} style={{padding:"8px 10px",borderRadius:5,cursor:"pointer",border:on?"1px solid "+color+"66":"1px solid rgba(255,255,255,.07)",background:on?color+"14":"rgba(255,255,255,.02)",display:"flex",alignItems:"center",gap:7,transition:"all .18s"}}>
+          {icon && <span style={{fontSize:13}}>{icon}</span>}
+          <span style={{fontSize:11,color:on?"#fff":"rgba(255,255,255,.4)",flex:1,lineHeight:1.4}}>{lbl}</span>
+          {on && <span style={{color,fontSize:10}}>✦</span>}
+        </div>;
+      })}
+    </div>
+  </div>;
+}
+
+function ChakraPicker({selected, onChange}) {
+  return <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(110px,1fr))",gap:7,marginBottom:16}}>
+    {CHAKRAS.map(c => {
+      const on = selected.includes(c.name);
+      return <div key={c.name} onClick={() => onChange(on ? selected.filter(x => x !== c.name) : [...selected, c.name])} style={{padding:"10px 8px",borderRadius:6,cursor:"pointer",border:on?"1px solid "+c.color+"77":"1px solid rgba(255,255,255,.06)",background:on?c.color+"14":"rgba(255,255,255,.02)",textAlign:"center",transition:"all .18s"}}>
+        <div style={{width:8,height:8,borderRadius:"50%",background:c.color,margin:"0 auto 5px"}} />
+        <div style={{fontFamily:"'Cinzel',serif",fontSize:10,color:on?"#fff":"rgba(255,255,255,.42)",marginBottom:2}}>{c.name}</div>
+        <div style={{fontSize:9,color:on?c.color:"rgba(255,255,255,.2)",lineHeight:1.4}}>{c.desc}</div>
+      </div>;
+    })}
+  </div>;
+}
 
 const emptyP = () => ({
-  preferredName:"", legalFirst:"", legalMiddle:"", legalLast:"",
-  bMonth:"", bDay:"", bYear:"",
-  natalSun:"", natalMoon:"", natalRising:"", natalNorthNode:"", natalChiron:"",
-  shadowThemes:"", goals:""
+  pronouns:"", preferredName:"", legalFirst:"", legalMiddle:"", legalLast:"",
+  currentFirst:"", currentLast:"",
+  bMonth:"", bDay:"", bYear:"", timeKnown:"", bHour:"", bMinute:"",
+  bCity:"", bState:"", bCountry:"",
+  natalSun:"", natalMoon:"", natalRising:"", natalMercury:"", natalVenus:"", natalMars:"",
+  natalJupiter:"", natalSaturn:"", natalChiron:"", natalNorthNode:"", natalSouthNode:"",
+  natalHouse1:"", natalHouse4:"", natalHouse7:"", natalHouse10:"", natalAspects:"", natalSource:"",
+  shadowThemes:[], recurringPatterns:"", childhoodWound:"", shadowDepth:5, shadowGoal:"",
+  meditationFocus:[], meditationExp:"", currentPractice:"", chakraFocus:[], freqInterest:[], binauralInterest:[],
+  goals:""
 });
 
 // ─── UI PRIMITIVES ────────────────────────────────────────
@@ -647,21 +692,97 @@ export default function App() {
               <TS l="Year" v={person.bYear} s={v => upd({bYear:v})} opts={YEARS} r />
             </div>
 
+            <GD label="Time & Place of Birth — Optional" />
+            <div style={{ fontSize:11, color:"rgba(255,255,255,.35)", marginBottom:12, fontStyle:"italic" }}>Birth time calculates your Rising sign. If unknown, leave blank.</div>
+            <TS l="Birth Time Known?" v={person.timeKnown} s={v => upd({timeKnown:v})} opts={[{v:"exact",l:"Yes — exact"},{v:"approximate",l:"Approximate"},{v:"unknown",l:"Don't know"}]} />
+            {(person.timeKnown === "exact" || person.timeKnown === "approximate") && <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
+              <TS l="Hour" v={person.bHour} s={v => upd({bHour:v})} opts={Array.from({length:24},(_,h)=>({v:String(h).padStart(2,"0"),l:h===0?"12:00 AM":h<12?h+":00 AM":h===12?"12:00 PM":(h-12)+":00 PM"}))} />
+              <TS l="Minute" v={person.bMinute} s={v => upd({bMinute:v})} opts={["00","05","10","15","20","25","30","35","40","45","50","55"].map(m=>({v:m,l:":"+m}))} />
+            </div>}
+            <div style={{ display:"grid", gridTemplateColumns:"2fr 1fr 1fr", gap:10 }}>
+              <TI l="City of Birth" v={person.bCity} s={v => upd({bCity:v})} p="e.g. Dallas" />
+              <TI l="State" v={person.bState} s={v => upd({bState:v})} p="TX" />
+              <TI l="Country" v={person.bCountry} s={v => upd({bCountry:v})} p="USA" />
+            </div>
+
             {isFull && <>
-              <GD label="Natal Chart — Optional" />
-              <div style={{ fontSize:11, color:"rgba(255,255,255,.35)", marginBottom:12, fontStyle:"italic" }}>Get your free chart at astro.com. More placements = deeper reading.</div>
-              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:10 }}>
-                <TS l="Sun Sign" v={person.natalSun} s={v => upd({natalSun:v})} opts={ZODIAC} />
-                <TS l="Moon Sign" v={person.natalMoon} s={v => upd({natalMoon:v})} opts={ZODIAC} />
-                <TS l="Rising" v={person.natalRising} s={v => upd({natalRising:v})} opts={ZODIAC} />
-              </div>
-              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
-                <TS l="North Node" v={person.natalNorthNode} s={v => upd({natalNorthNode:v})} opts={ZODIAC} />
-                <TS l="Chiron" v={person.natalChiron} s={v => upd({natalChiron:v})} opts={ZODIAC} />
+              <GD label="Current Name (if different from birth)" />
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+                <TI l="Current First Name" v={person.currentFirst} s={v => upd({currentFirst:v})} p="If different from birth" />
+                <TI l="Current Last Name" v={person.currentLast} s={v => upd({currentLast:v})} p="Married / chosen name" />
               </div>
 
+              <GD label="Time and Place of Birth — Optional" />
+              <TS l="Birth time known?" v={person.timeKnown} s={v => upd({timeKnown:v})} opts={[{v:"exact",l:"Yes — exact"},{v:"approximate",l:"Approximate"},{v:"unknown",l:"Don't know"}]} />
+              {(person.timeKnown === "exact" || person.timeKnown === "approximate") && <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+                <TS l="Hour" v={person.bHour} s={v => upd({bHour:v})} opts={HRS} />
+                <TS l="Minute" v={person.bMinute} s={v => upd({bMinute:v})} opts={MINS} />
+              </div>}
+              <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr",gap:10}}>
+                <TI l="City of Birth" v={person.bCity} s={v => upd({bCity:v})} p="e.g. Dallas" />
+                <TI l="State" v={person.bState} s={v => upd({bState:v})} p="TX" />
+                <TI l="Country" v={person.bCountry} s={v => upd({bCountry:v})} p="USA" />
+              </div>
+
+              <GD label="Natal Chart Placements — Optional but Powerful" />
+              <div style={{background:"rgba(126,196,212,.04)",border:"1px solid rgba(126,196,212,.12)",borderRadius:4,padding:"9px 13px",marginBottom:12,fontSize:11,color:"rgba(255,255,255,.42)",fontStyle:"italic",lineHeight:1.8}}>
+                🌙 Get your free chart at <strong style={{color:"rgba(126,196,212,.7)"}}>astro.com</strong> → Extended Chart Selection. More placements = deeper reading.
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
+                <TS l="Sun Sign" v={person.natalSun} s={v => upd({natalSun:v})} opts={ZODIAC} />
+                <TS l="Moon Sign" v={person.natalMoon} s={v => upd({natalMoon:v})} opts={ZODIAC} />
+                <TS l="Rising / Ascendant" v={person.natalRising} s={v => upd({natalRising:v})} opts={ZODIAC} />
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
+                <TS l="Mercury" v={person.natalMercury} s={v => upd({natalMercury:v})} opts={ZODIAC} />
+                <TS l="Venus" v={person.natalVenus} s={v => upd({natalVenus:v})} opts={ZODIAC} />
+                <TS l="Mars" v={person.natalMars} s={v => upd({natalMars:v})} opts={ZODIAC} />
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
+                <TS l="Jupiter" v={person.natalJupiter} s={v => upd({natalJupiter:v})} opts={ZODIAC} />
+                <TS l="Saturn" v={person.natalSaturn} s={v => upd({natalSaturn:v})} opts={ZODIAC} />
+                <TS l="Chiron" v={person.natalChiron} s={v => upd({natalChiron:v})} opts={ZODIAC} />
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+                <TS l="North Node" v={person.natalNorthNode} s={v => upd({natalNorthNode:v})} opts={ZODIAC} />
+                <TS l="South Node" v={person.natalSouthNode} s={v => upd({natalSouthNode:v})} opts={ZODIAC} />
+              </div>
+              <GD label="Key House Cusps — Optional" />
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:10}}>
+                <TS l="1st House (Self)" v={person.natalHouse1} s={v => upd({natalHouse1:v})} opts={ZODIAC} />
+                <TS l="4th House (Home)" v={person.natalHouse4} s={v => upd({natalHouse4:v})} opts={ZODIAC} />
+                <TS l="7th House (Partnership)" v={person.natalHouse7} s={v => upd({natalHouse7:v})} opts={ZODIAC} />
+                <TS l="10th House (Career)" v={person.natalHouse10} s={v => upd({natalHouse10:v})} opts={ZODIAC} />
+              </div>
+              <TTA l="Major Aspects or Patterns — Optional" v={person.natalAspects} s={v => upd({natalAspects:v})} p="e.g. Sun conjunct Saturn, T-square in cardinal signs, stellium in 8th house…" rows={2} />
+
               <GD label="Shadow Work" />
-              <TTA l="Shadow themes active in your life" v={person.shadowThemes} s={v => upd({shadowThemes:v})} p="e.g. worthiness wounds, people-pleasing, self-sabotage, fear of visibility…" rows={3} />
+              <p style={{fontSize:12,color:"rgba(255,255,255,.35)",marginBottom:12,fontStyle:"italic",lineHeight:1.7}}>🌑 The shadow is not what is wrong with you — it is what has been unwitnessed. These selections directly shape the shadow work section of your reading.</p>
+              <MP label="Shadow themes active in your life" items={SHADOW_THEMES} selected={person.shadowThemes} onChange={v => upd({shadowThemes:v})} color="#9B7ED4" />
+              <TTA l="Recurring patterns or cycles" v={person.recurringPatterns} s={v => upd({recurringPatterns:v})} p="e.g. always attracting unavailable people, self-sabotage right before success…" rows={3} />
+              <TTA l="Earliest wound that still echoes — Optional" v={person.childhoodWound} s={v => upd({childhoodWound:v})} p="A few words is enough — only what feels safe" rows={2} />
+              <div style={{marginBottom:16}}>
+                <Lbl c="Readiness to look at harder material (1–10)" />
+                <p style={{fontSize:11,color:"rgba(255,255,255,.3)",marginBottom:8,fontStyle:"italic"}}>Calibrates depth and tone of the shadow section</p>
+                <div style={{display:"flex",alignItems:"center",gap:12}}>
+                  <input type="range" min={1} max={10} value={person.shadowDepth||5} onChange={e => upd({shadowDepth:Number(e.target.value)})} style={{flex:1,accentColor:"#9B7ED4"}} />
+                  <div style={{minWidth:32,height:32,borderRadius:"50%",background:"rgba(155,126,212,.2)",border:"1px solid rgba(155,126,212,.4)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Cinzel',serif",color:"#9B7ED4",fontSize:13}}>{person.shadowDepth||5}</div>
+                </div>
+              </div>
+              <TS l="Shadow work goal" v={person.shadowGoal} s={v => upd({shadowGoal:v})} opts={[{v:"patterns",l:"Understand why I keep repeating patterns"},{v:"release",l:"Release what no longer serves"},{v:"child",l:"Heal the inner child"},{v:"reclaim",l:"Reclaim disowned parts of myself"},{v:"integrate",l:"Fully integrate light and shadow"},{v:"beginning",l:"Just beginning — not sure yet"}]} />
+
+              <GD label="Meditation and Sound Healing" />
+              <MP label="Meditation focus areas" items={MED_FOCUS} selected={person.meditationFocus} onChange={v => upd({meditationFocus:v})} color="#7EC4D4" />
+              <TS l="Experience level" v={person.meditationExp} s={v => upd({meditationExp:v})} opts={[{v:"none",l:"None — completely new"},{v:"curious",l:"Tried a few times"},{v:"beginner",l:"Occasional practice"},{v:"intermediate",l:"Regular practice"},{v:"advanced",l:"Deep daily practice"}]} />
+              <TTA l="Current practice — Optional" v={person.currentPractice} s={v => upd({currentPractice:v})} p="Journaling, breathwork, yoga, prayer, cold plunge, ritual…" rows={2} />
+
+              <GD label="Chakra Focus" />
+              <p style={{fontSize:11,color:"rgba(255,255,255,.32)",marginBottom:10,fontStyle:"italic"}}>Select centers that feel blocked, overactive, or calling for attention</p>
+              <ChakraPicker selected={person.chakraFocus} onChange={v => upd({chakraFocus:v})} />
+
+              <GD label="Sound Healing Frequencies" />
+              <MP label="Solfeggio frequencies you are drawn to" items={SOLFEGGIO} selected={person.freqInterest} onChange={v => upd({freqInterest:v})} color="#C8A96E" cols={1} />
+              <MP label="Binaural brainwave states" items={BINAURAL} selected={person.binauralInterest} onChange={v => upd({binauralInterest:v})} color="#D47E9B" cols={1} />
             </>}
 
             <GD label="Intentions" />
