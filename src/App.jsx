@@ -264,7 +264,7 @@ function buildPrompt(p, tier) {
   const peopleData = (p.people || []).filter(p2 => p2.firstName && p2.bMonth && p2.bDay && p2.bYear).map(p2 => {
     const m2 = Number(p2.bMonth), d2 = Number(p2.bDay), y2 = Number(p2.bYear);
     const lp2 = numReduce(numReduce(m2,false) + numReduce(d2,false) + numReduce(digitSum(y2),false));
-    return { name: p2.firstName + (p2.lastName ? " " + p2.lastName : ""), lifePath: lp2, dob: p2.bMonth+"/"+p2.bDay+"/"+p2.bYear };
+    return { name: p2.firstName + (p2.lastName ? " " + p2.lastName : ""), lifePath: lp2, dob: p2.bMonth+"/"+p2.bDay+"/"+p2.bYear, relationship: p2.relationship || "Other" };
   });
 
   const lines = [];
@@ -311,7 +311,7 @@ function buildPrompt(p, tier) {
   lines.push("Planes — Physical: " + n.planes.Physical + " Mental: " + n.planes.Mental + " Emotional: " + n.planes.Emotional + " Intuitive: " + n.planes.Intuitive + " | Dominant: " + n.dominantPlane);
   lines.push("Arrows present: " + (n.arrowsPresent.length ? n.arrowsPresent.join(", ") : "None") + " | Absent: " + (n.arrowsMissing.length ? n.arrowsMissing.join(", ") : "None"));
   lines.push("Chinese Zodiac: " + n.chinese.element + " " + n.chinese.animal + " (" + n.chinese.polarity + ") | Inner: " + n.chinese.innerAnimal + " | Secret: " + n.chinese.secretAnimal);
-  if (p.sunSign) lines.push("Sun Sign: " + p.sunSign);
+  if (n.sunSign) lines.push("Sun Sign: " + n.sunSign);
   lines.push("");
   if (p.shadowThemes && p.shadowThemes.length) lines.push("Shadow themes selected: " + p.shadowThemes.join(", "));
   if (p.childhoodWound) lines.push("Wound shared: " + p.childhoodWound);
@@ -320,7 +320,7 @@ function buildPrompt(p, tier) {
   if (peopleData.length) {
     lines.push("");
     lines.push("ADDITIONAL PEOPLE FOR COMPATIBILITY:");
-    peopleData.forEach(pd => lines.push(pd.name + " | DOB: " + pd.dob + " | Life Path: " + pd.lifePath));
+    peopleData.forEach(pd => lines.push(pd.name + " | Relationship: " + pd.relationship + " | DOB: " + pd.dob + " | Life Path: " + pd.lifePath));
   }
   lines.push("");
   lines.push("Return this exact JSON structure with all fields populated with real content:");
@@ -427,7 +427,7 @@ function buildPrompt(p, tier) {
       reading: "3 sentences on the three-layer animal portrait — year animal (public self), inner animal (private nature), secret animal (subconscious drive) and how they work together"
     },
 
-    ...(p.sunSign ? { sunSign: { sign: p.sunSign, reading: "2 sentences on how " + p.sunSign + " Sun energy interplays with Life Path " + formatNum(n.lifePath) + " — where they harmonize or create productive tension" } } : {}),
+    ...(n.sunSign ? { sunSign: { sign: n.sunSign, reading: "2 sentences on how " + n.sunSign + " Sun energy interplays with Life Path " + formatNum(n.lifePath) + " — where they harmonize or create productive tension" } } : {}),
 
     shadowWork: {
       coreWound: "3 sentences identifying the wound thread running through the numerology — name the specific numbers driving this pattern. Only reference biographical details explicitly shared above.",
@@ -445,8 +445,9 @@ function buildPrompt(p, tier) {
 
     ...(peopleData.length ? { compatibility: peopleData.map(pd => ({
       name: pd.name,
+      relationship: pd.relationship,
       lifePath: pd.lifePath,
-      reading: "3 sentences on the Life Path " + formatNum(n.lifePath) + " and Life Path " + pd.lifePath + " dynamic — natural resonance, friction points, and what this connection is here to teach both souls"
+      reading: "3 sentences on the Life Path " + formatNum(n.lifePath) + " and Life Path " + pd.lifePath + " dynamic as " + pd.relationship + " — natural resonance, friction points, and what this connection is here to teach both souls"
     }))} : {}),
 
     holisticSynthesis: {
@@ -838,7 +839,7 @@ function ReadingView({ reading: r, name, onEmail, emailSt }) {
       <InfoBlock label={r.sunSign.sign + " Sun"} text={r.sunSign.reading} color="#7EC4D4" />
     </Sec>}
     {r.compatibility && r.compatibility.length > 0 && <Sec icon="✦" title="Compatibility — Numerology Relationship Reading" color="#9B7ED4">
-      {r.compatibility.map((c, i) => <Card key={i} title={"Life Path " + c.lifePath + " — " + c.name} text={c.reading} color="#9B7ED4" />)}
+      {r.compatibility.map((c, i) => <Card key={i} title={(c.relationship ? c.relationship + " — " : "") + c.name + " · Life Path " + c.lifePath} text={c.reading} color="#9B7ED4" />)}
     </Sec>}
 
     {r.chineseZodiac && <Sec icon="🐉" title={"Chinese Zodiac — Three Animal System"} color="#D47E9B">
@@ -950,6 +951,8 @@ export default function App() {
 
   const tier = TIERS.find(t => t.id === tierId);
   const isFull = tierId && tierId !== "soul-spark";
+  const maxPeople = tier ? (tier.maxPeople || 0) : 0;
+  const hasPeople = maxPeople > 0;
 
   const pickTier = id => { setTierId(id); setStep("form"); window.scrollTo({ top:0, behavior:"smooth" }); };
 
@@ -1072,9 +1075,7 @@ export default function App() {
               <TI l="Country" v={person.bCountry} s={v => upd({bCountry:v})} p="USA" />
             </div>
 
-            <GD label="Sun Sign" />
-            <div style={{fontSize:11,color:"rgba(255,255,255,.35)",marginBottom:10,fontStyle:"italic"}}>Your Sun sign adds the solar layer to your numerology portrait.</div>
-            <TS l="Sun Sign" v={person.sunSign} s={v => upd({sunSign:v})} opts={ZODIAC} />
+
 
             {isFull && <>
               <GD label="Current Name (if different from birth)" />
