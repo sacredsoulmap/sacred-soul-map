@@ -35,11 +35,11 @@ function nameSum(name, filter) {
   }, 0);
 }
 
-function reduce(n, keepMaster = true) {
+function numReduce(n, keepMaster = true) {
   if (keepMaster && (n === 11 || n === 22 || n === 33)) return n;
   if (n < 10) return n;
   const sum = String(n).split("").reduce((s, d) => s + Number(d), 0);
-  return reduce(sum, keepMaster);
+  return numReduce(sum, keepMaster);
 }
 
 function digitSum(str) {
@@ -76,24 +76,24 @@ function calcNums(p) {
   const curD = today.getDate();
 
   // ── Core numbers ──
-  const mR = reduce(m, false), dR = reduce(d, false), yR = reduce(digitSum(y), false);
-  const lifePath = reduce(mR + dR + yR);
-  const expression = reduce(nameSum(full));
-  const soulUrge = reduce(nameSum(full, "v"));
-  const personality = reduce(nameSum(full, "c"));
-  const birthday = reduce(d);
-  const personalYear = reduce(reduce(m,false) + reduce(d,false) + reduce(digitSum(curY),false));
-  const maturity = reduce(lifePath + expression);
+  const mR = numReduce(m, false), dR = numReduce(d, false), yR = numReduce(digitSum(y), false);
+  const lifePath = numReduce(mR + dR + yR);
+  const expression = numReduce(nameSum(full));
+  const soulUrge = numReduce(nameSum(full, "v"));
+  const personality = numReduce(nameSum(full, "c"));
+  const birthday = numReduce(d);
+  const personalYear = numReduce(numReduce(m,false) + numReduce(d,false) + numReduce(digitSum(curY),false));
+  const maturity = numReduce(lifePath + expression);
 
   // ── Personal Month & Day ──
-  const personalMonth = reduce(personalYear + reduce(curM, false));
-  const personalDay = reduce(personalMonth + reduce(curD, false));
+  const personalMonth = numReduce(personalYear + numReduce(curM, false));
+  const personalDay = numReduce(personalMonth + numReduce(curD, false));
 
   // ── Bridge Numbers (the gap between paired numbers — what to work on) ──
   const lpExpBridge = Math.abs((lifePath > 9 ? lifePath % 10 : lifePath) - (expression > 9 ? expression % 10 : expression));
   const suPersBridge = Math.abs((soulUrge > 9 ? soulUrge % 10 : soulUrge) - (personality > 9 ? personality % 10 : personality));
-  const bridgeLifeExp = reduce(lpExpBridge, false);
-  const bridgeSoulPers = reduce(suPersBridge, false);
+  const bridgeLifeExp = numReduce(lpExpBridge, false);
+  const bridgeSoulPers = numReduce(suPersBridge, false);
 
   // ── Subconscious Self (9 minus missing number count — natural response under pressure) ──
   const allLetters = full.toUpperCase().replace(/[^A-Z]/g,"").split("");
@@ -117,17 +117,17 @@ function calcNums(p) {
   const dominantPlane = Object.entries(planes).sort((a,b) => b[1]-a[1])[0]?.[0] || "";
 
   // ── 4 Challenges (Phillips: the inner tests of each life stage) ──
-  const ch1 = reduce(Math.abs(mR - dR), false);
-  const ch2 = reduce(Math.abs(dR - yR), false);
-  const ch3 = reduce(Math.abs(ch1 - ch2), false);
-  const ch4 = reduce(Math.abs(mR - yR), false);
+  const ch1 = numReduce(Math.abs(mR - dR), false);
+  const ch2 = numReduce(Math.abs(dR - yR), false);
+  const ch3 = numReduce(Math.abs(ch1 - ch2), false);
+  const ch4 = numReduce(Math.abs(mR - yR), false);
 
   // ── 4 Pinnacles ──
-  const pin1 = reduce(mR + dR);
-  const pin2 = reduce(dR + yR);
-  const pin3 = reduce(pin1 + pin2);
-  const pin4 = reduce(mR + yR);
-  const lpR = reduce(lifePath, false);
+  const pin1 = numReduce(mR + dR);
+  const pin2 = numReduce(dR + yR);
+  const pin3 = numReduce(pin1 + pin2);
+  const pin4 = numReduce(mR + yR);
+  const lpR = numReduce(lifePath, false);
   const p1end = 36 - lpR;
   const p2end = p1end + 9;
   const p3end = p2end + 9;
@@ -186,9 +186,9 @@ function calcNums(p) {
   }
 
   // ── Current name comparison ──
-  const currentExpression = currentFull ? reduce(nameSum(currentFull)) : null;
-  const currentSoulUrge    = currentFull ? reduce(nameSum(currentFull, "v")) : null;
-  const currentPersonality = currentFull ? reduce(nameSum(currentFull, "c")) : null;
+  const currentExpression = currentFull ? numReduce(nameSum(currentFull)) : null;
+  const currentSoulUrge    = currentFull ? numReduce(nameSum(currentFull, "v")) : null;
+  const currentPersonality = currentFull ? numReduce(nameSum(currentFull, "c")) : null;
 
   // ── Master number awareness ──
   const masterNumbers = [];
