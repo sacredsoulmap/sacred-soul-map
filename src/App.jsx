@@ -208,6 +208,7 @@ async function generateReading(p, tier, onProgress) {
     body: JSON.stringify({
       model: "claude-sonnet-4-20250514",
       max_tokens: 16000,
+      system: "You are a numerology and astrology reading generator. You MUST respond with ONLY a valid JSON object. No markdown formatting. No backticks. No code fences. No explanation text before or after. No preamble. Your ENTIRE response must be parseable by JSON.parse(). Start immediately with { and end with }.",
       messages: [{ role: "user", content: prompt }]
     })
   });
