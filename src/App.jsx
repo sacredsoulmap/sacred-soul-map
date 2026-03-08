@@ -62,6 +62,18 @@ const ARROW_DEFS = [
   { id:"intel", name:"Arrow of the Intellect",    nums:[3,6,9], desc:"High mental capacity, creative intelligence, love of learning" },
 ];
 
+// ─── PLANES OF EXPRESSION MAP (David A. Phillips) ───────
+// Each letter maps to one of four planes of expression
+const PLANE_MAP = {
+  A:"Mental",  B:"Emotional", C:"Intuitive", D:"Physical",
+  E:"Emotional",F:"Intuitive", G:"Mental",   H:"Mental",
+  I:"Emotional",J:"Mental",   K:"Intuitive", L:"Mental",
+  M:"Emotional",N:"Mental",   O:"Emotional", P:"Mental",
+  Q:"Intuitive",R:"Emotional",S:"Emotional", T:"Emotional",
+  U:"Intuitive",V:"Intuitive",W:"Physical",  X:"Physical",
+  Y:"Intuitive",Z:"Emotional"
+};
+
 // ─── MAIN CALCULATOR ──────────────────────────────────────
 function calcNums(p) {
   const full = [p.legalFirst, p.legalMiddle, p.legalLast].filter(Boolean).join(" ");
