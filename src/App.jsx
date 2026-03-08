@@ -974,8 +974,67 @@ function ReadingView({ reading: r, name, onEmail, emailSt }) {
   </div>;
 }
 
+// ─── CHART SCANNER (manual trigger) ──────────────────────
+function ChartScanner({ person, upd }) {
+  const [pendingImages, setPendingImages] = useState([]);
+  const [scanning, setScanning] = useState(false);
+  const [status, setStatus] = useState("");
+
+  const onFiles = e => {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+    setPendingImages(files);
+    setStatus("ready");
+  };
+
+  const runScan = async () => {
+    if (!pendingImages.length) return;
+    setScanning(true); setStatus("");
+    try {
+      const images = await Promise.all(pendingImages.map(file => new Promise((res, rej) => {
+        const r2 = new FileReader();
+        r2.onload = ev => res({ base64: ev.target.result.split(",")[1], mediaType: file.type });
+        r2.onerror = rej;
+        r2.readAsDataURL(file);
+      })));
+      const placements = await scanChartImages(images);
+      const filtered = {};
+      Object.keys(placements).forEach(k => { if (placements[k]) filtered[k] = placements[k]; });
+      upd({ ...filtered });
+      setStatus("done");
+    } catch {
+      setStatus("error");
+    } finally {
+      setScanning(false);
+    }
+  };
+
+  return (
+    <div style={{background:"rgba(155,126,212,.04)",border:"1px solid rgba(155,126,212,.15)",borderRadius:7,padding:"14px 16px",marginBottom:16}}>
+      <div style={{fontFamily:"'Cinzel',serif",fontSize:10,letterSpacing:".14em",color:"#9B7ED4",textTransform:"uppercase",marginBottom:6}}>
+        ✦ Optional — Let AI Read Your Chart Image
+      </div>
+      <p style={{fontSize:11,color:"rgba(255,255,255,.38)",fontStyle:"italic",lineHeight:1.8,marginBottom:12}}>
+        Already have a chart screenshot? Upload it and click <strong style={{color:"rgba(155,126,212,.7)"}}>Scan Chart</strong> — AI will read your placements and fill the fields below. Review and adjust before generating your reading.
+      </p>
+      <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
+        <label style={{display:"inline-block",padding:"9px 16px",background:"rgba(255,255,255,.04)",border:"1px solid rgba(255,255,255,.12)",borderRadius:4,cursor:"pointer",fontFamily:"'Cinzel',serif",fontSize:10,letterSpacing:".12em",color:"rgba(255,255,255,.5)",textTransform:"uppercase"}}>
+          {pendingImages.length ? "📷 " + pendingImages.length + " image" + (pendingImages.length > 1 ? "s" : "") + " selected — ready to scan" : "📷 Choose Image(s)"}
+          <input type="file" accept="image/*" multiple style={{display:"none"}} onChange={onFiles} />
+        </label>
+        <button onClick={runScan} disabled={!pendingImages.length || scanning}
+          style={{padding:"9px 20px",fontFamily:"'Cinzel',serif",fontSize:10,letterSpacing:".14em",textTransform:"uppercase",cursor:pendingImages.length&&!scanning?"pointer":"not-allowed",opacity:pendingImages.length&&!scanning?1:0.4,background:scanning?"rgba(155,126,212,.1)":"rgba(155,126,212,.18)",border:"1px solid rgba(155,126,212,.5)",borderRadius:4,color:"#9B7ED4"}}>
+          {scanning ? "🔍 Reading…" : "✦ Scan Chart"}
+        </button>
+      </div>
+      {status === "done" && <p style={{fontSize:11,color:"rgba(126,196,212,.85)",marginTop:10,fontStyle:"italic"}}>✓ Placements filled below — review each field and adjust anything before generating.</p>}
+      {status === "error" && <p style={{fontSize:11,color:"rgba(231,76,60,.8)",marginTop:10,fontStyle:"italic"}}>⚠ Couldn't read the chart clearly. Enter placements manually below, or try a clearer screenshot.</p>}
+      {scanning && <p style={{fontSize:11,color:"rgba(200,169,110,.6)",marginTop:10,fontStyle:"italic"}}>Reading your chart… ~10–15 seconds.</p>}
+    </div>
+  );
+}
+
 // ─── STARS ────────────────────────────────────────────────
-function Stars() {
   return <div style={{ position:"fixed", inset:0, pointerEvents:"none", zIndex:0, background:"radial-gradient(ellipse at 20% 50%,#1a0a2e 0%,#0d0d1a 60%,#000 100%)" }}>
     {Array.from({ length:85 }, (_, i) => (
       <div key={i} style={{ position:"absolute", width:((i%3)*0.7+0.5)+"px", height:((i%3)*0.7+0.5)+"px", borderRadius:"50%", background:"rgba(255,255,255,"+(((i%5)*0.1)+0.15)+")", top:((i*17.3)%100)+"%", left:((i*23.7)%100)+"%", animation:"tw "+((i%4)+2)+"s ease-in-out infinite", animationDelay:(i*0.09)+"s" }} />
@@ -1134,34 +1193,32 @@ export default function App() {
               </div>
 
               <GD label="Natal Chart Placements — Optional but Powerful" />
-              <div style={{background:"rgba(126,196,212,.04)",border:"1px solid rgba(126,196,212,.12)",borderRadius:7,padding:"14px 16px",marginBottom:16}}>
-                <div style={{fontFamily:"'Cinzel',serif",fontSize:10,letterSpacing:".14em",color:"#7EC4D4",textTransform:"uppercase",marginBottom:8}}>✦ Upload Your Chart — Auto-Fill All Placements</div>
-                <p style={{fontSize:11,color:"rgba(255,255,255,.42)",fontStyle:"italic",lineHeight:1.8,marginBottom:12}}>Screenshot from astro.com, Co-Star, TimePassages, or any chart app. All planets including Uranus, Neptune, Pluto, Part of Fortune will be extracted automatically.</p>
-                <label style={{display:"inline-block",padding:"10px 20px",background:"rgba(126,196,212,.12)",border:"1px solid rgba(126,196,212,.35)",borderRadius:4,cursor:"pointer",fontFamily:"'Cinzel',serif",fontSize:10,letterSpacing:".14em",color:"#7EC4D4",textTransform:"uppercase",transition:"all .2s"}}>
-                  {person.chartScanStatus === "scanning" ? "🔍 Reading Charts…" : person.chartScanStatus === "done" ? "✓ Charts Scanned — Re-Upload" : person.chartScanStatus === "error" ? "⚠ Try Again" : "📷 Upload Chart Image(s)"}
-                  <input type="file" accept="image/*" multiple style={{display:"none"}} onChange={async e => {
-                    const files = Array.from(e.target.files);
-                    if (!files.length) return;
-                    upd({chartScanStatus:"scanning"});
-                    try {
-                      const images = await Promise.all(files.map(file => new Promise((res, rej) => {
-                        const r2 = new FileReader();
-                        r2.onload = ev => res({ base64: ev.target.result.split(",")[1], mediaType: file.type });
-                        r2.onerror = rej;
-                        r2.readAsDataURL(file);
-                      })));
-                      const placements = await scanChartImages(images);
-                      const filtered = {};
-                      Object.keys(placements).forEach(k => { if (placements[k]) filtered[k] = placements[k]; });
-                      upd({...filtered, chartScanStatus:"done"});
-                    } catch(err2) {
-                      upd({chartScanStatus:"error"});
-                    }
-                  }} />
-                </label>
-                {person.chartScanStatus === "done" && <p style={{fontSize:11,color:"rgba(126,196,212,.8)",marginTop:8,fontStyle:"italic"}}>✓ Placements filled below — review and adjust anything that looks off.</p>}
-                {person.chartScanStatus === "scanning" && <p style={{fontSize:11,color:"rgba(200,169,110,.7)",marginTop:8,fontStyle:"italic"}}>Reading your chart(s)… about 10–15 seconds.</p>}
+
+              {/* ── How to get your chart ── */}
+              <div style={{background:"rgba(126,196,212,.04)",border:"1px solid rgba(126,196,212,.15)",borderRadius:8,padding:"16px 18px",marginBottom:16}}>
+                <div style={{fontFamily:"'Cinzel',serif",fontSize:10,letterSpacing:".14em",color:"#7EC4D4",textTransform:"uppercase",marginBottom:10}}>✦ How to Get Your Free Natal Chart from Astro.com</div>
+                <div style={{display:"grid",gridTemplateColumns:"auto 1fr",gap:"6px 12px",fontSize:11,lineHeight:1.9}}>
+                  {[
+                    ["1","Go to astro.com (free — no account needed)"],
+                    ["2","Click Free Horoscopes → Extended Chart Selection"],
+                    ["3","Enter your birth date, exact time, and city"],
+                    ["4","Chart type: select Natal Chart, Ascendant"],
+                    ["5","Click "Click here to show chart""],
+                    ["6","Look at the planet list on the left side of the chart — it shows every placement"],
+                    ["7","Enter each placement in the fields below"],
+                  ].map(([n, txt]) => <>
+                    <span key={n+"n"} style={{color:"#7EC4D4",fontFamily:"'Cinzel',serif",fontSize:11,opacity:.7,paddingTop:1}}>{n}.</span>
+                    <span key={n+"t"} style={{color:"rgba(255,255,255,.5)"}}>{txt}</span>
+                  </>)}
+                </div>
+                <div style={{marginTop:12,padding:"8px 12px",background:"rgba(200,169,110,.06)",borderRadius:5,border:"1px solid rgba(200,169,110,.15)"}}>
+                  <span style={{fontFamily:"'Cinzel',serif",fontSize:9,color:"rgba(200,169,110,.7)",textTransform:"uppercase",letterSpacing:".1em"}}>Tip — </span>
+                  <span style={{fontSize:11,color:"rgba(255,255,255,.4)",fontStyle:"italic"}}>Astro.com lists placements as e.g. "Sun 20°13' Leo" — just enter the sign (Leo). Birth time is required for Rising sign and house cusps.</span>
+                </div>
               </div>
+
+              {/* ── Optional AI scan ── */}
+              <ChartScanner person={person} upd={upd} />
 
               <div style={{fontFamily:"'Cinzel',serif",fontSize:9,letterSpacing:".14em",color:"rgba(200,169,110,.5)",textTransform:"uppercase",marginBottom:10}}>Personal Planets</div>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
