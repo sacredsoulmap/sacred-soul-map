@@ -111,7 +111,7 @@ function buildPrompt(p, tier) {
   const lines = [
     "You are a master numerologist trained in David A. Philips Complete Book of Numerology, Western astrologer, Chinese zodiac scholar, and shadow work guide. Your readings are precise, personal, and transformative.",
     "",
-    "Return ONLY a valid JSON object. No markdown, no backticks, no explanation.",
+    "CRITICAL: Return ONLY a raw JSON object. No markdown. No backticks. No explanation. No text before or after. Start your response with { and end with }.",
     "",
     "PERSON: " + name,
     "Full birth name: " + n.fullName,
@@ -241,14 +241,22 @@ async function generateReading(p, tier, onProgress) {
     }
   }
 
-  const clean = accumulated.replace(/```json|```/g, "").trim();
+  // Aggressively extract JSON from the response
+  let clean = accumulated.trim();
+  // Strip markdown code fences
+  clean = clean.replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/\s*```$/i, "").trim();
+  // Find first { and last }
+  const first = clean.indexOf("{");
+  const last = clean.lastIndexOf("}");
+  if (first !== -1 && last !== -1 && last > first) {
+    clean = clean.slice(first, last + 1);
+  }
   try {
     return JSON.parse(clean);
   } catch (e) {
-    const last = clean.lastIndexOf("}");
-    if (last > 100) {
-      try { return JSON.parse(clean.slice(0, last + 1)); } catch {}
-    }
+    // Try to fix common issues - trailing commas
+    const fixed = clean.replace(/,\s*([}\]])/g, "$1");
+    try { return JSON.parse(fixed); } catch {}
     throw new Error("Reading complete but JSON failed. Please try again.");
   }
 }
@@ -711,4 +719,3 @@ export default function App() {
     </div>
   </>;
 }
-
