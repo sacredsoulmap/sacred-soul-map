@@ -36,10 +36,19 @@ function nameSum(name, filter) {
 }
 
 function numReduce(n, keepMaster = true) {
-  if (keepMaster && (n === 11 || n === 22 || n === 33)) return n;
+  if (keepMaster && (n === 11 || n === 22 || n === 33 || n === 44)) return n;
   if (n < 10) return n;
   const sum = String(n).split("").reduce((s, d) => s + Number(d), 0);
   return numReduce(sum, keepMaster);
+}
+
+
+function formatNum(n) {
+  if (n === 11) return "11/2";
+  if (n === 22) return "22/4";
+  if (n === 33) return "33/6";
+  if (n === 44) return "44/8";
+  return String(n);
 }
 
 function digitSum(str) {
@@ -205,7 +214,7 @@ function calcNums(p) {
   // ── Master number awareness ──
   const masterNumbers = [];
   [lifePath, expression, soulUrge, personality, personalYear, maturity, activePinnacle].forEach(n => {
-    if ([11,22,33].includes(n) && !masterNumbers.includes(n)) masterNumbers.push(n);
+    if ([11,22,33,44].includes(n) && !masterNumbers.includes(n)) masterNumbers.push(n);
   });
 
   return {
@@ -254,12 +263,12 @@ function buildPrompt(p, tier) {
     "Birth location: " + [p.bCity, p.bState, p.bCountry].filter(Boolean).join(", ") || "Not provided",
     "",
     "── CORE NUMBERS (Phillips) ──",
-    "Life Path: " + n.lifePath + (n.masterNumbers.includes(n.lifePath) ? " [MASTER NUMBER]" : ""),
-    "Expression (Destiny): " + n.expression,
-    "Soul Urge (Heart's Desire): " + n.soulUrge,
-    "Personality: " + n.personality,
+    "Life Path: " + formatNum(n.lifePath) + (n.masterNumbers.includes(n.lifePath) ? " [MASTER NUMBER]" : ""),
+    "Expression (Destiny): " + formatNum(n.expression),
+    "Soul Urge (Heart's Desire): " + formatNum(n.soulUrge),
+    "Personality: " + formatNum(n.personality),
     "Birthday Number: " + n.birthday,
-    "Maturity Number: " + n.maturity,
+    "Maturity Number: " + formatNum(n.maturity),
     "",
     "── TIMING ──",
     "Personal Year: " + n.personalYear,
@@ -340,7 +349,7 @@ function buildPrompt(p, tier) {
     lines.push("Current name: " + n.currentFull);
     lines.push("Expression: " + n.expression + " → " + n.currentExpression + (n.expression === n.currentExpression ? " [unchanged]" : " [SHIFTED]"));
     lines.push("Soul Urge:   " + n.soulUrge + " → " + n.currentSoulUrge + (n.soulUrge === n.currentSoulUrge ? " [unchanged]" : " [SHIFTED]"));
-    lines.push("Personality: " + n.personality + " → " + n.currentPersonality + (n.personality === n.currentPersonality ? " [unchanged]" : " [SHIFTED]"));
+    lines.push("Personality: " + formatNum(n.personality) + " → " + n.currentPersonality + (n.personality === n.currentPersonality ? " [unchanged]" : " [SHIFTED]"));
     lines.push("");
   }
 
@@ -349,33 +358,33 @@ function buildPrompt(p, tier) {
     lines.push("STRICT LENGTH LIMITS — exceed these and the JSON will be rejected:");
     lines.push(JSON.stringify({
       cosmicSnapshot: "2 sentences max. Theme + Life Path " + n.lifePath + " reference.",
-      lifePath: { number: n.lifePath, title: "3-word title", essence: "1 sentence", reading: "3 sentences on soul purpose. Name " + name + ".", shadow: "1 sentence on ego trap" },
-      expression: { number: n.expression, title: "3-word title", reading: "2 sentences on talents" },
-      soulUrge: { number: n.soulUrge, title: "3-word title", reading: "2 sentences on inner desire" },
+      lifePath: { number: formatNum(n.lifePath), title: "3-word title", essence: "1 sentence", reading: "3 sentences on soul purpose. Name " + name + ".", shadow: "1 sentence on ego trap" },
+      expression: { number: formatNum(n.expression), title: "3-word title", reading: "2 sentences on talents" },
+      soulUrge: { number: formatNum(n.soulUrge), title: "3-word title", reading: "2 sentences on inner desire" },
       personalYear: { number: n.personalYear, reading: "2 sentences on Personal Year " + n.personalYear },
       chineseZodiac: { sign: n.chinese.element + " " + n.chinese.animal, reading: "2 sentences" },
       soulMessage: "4 sentences to " + name + ". End with 1 sentence of pure truth."
     }));
   } else {
     lines.push("MANDATORY: Generate ALL JSON fields in the schema below. Every single field must contain real, specific content referencing the actual numbers and placements above. NEVER write placeholder text. NEVER leave a field as just a description of what it should contain. Write the actual reading.");
-    lines.push("VERIFY BEFORE WRITING: Soul Urge=" + n.soulUrge + ", Expression=" + n.expression + ", Personality=" + n.personality + ", Missing=" + (n.missing.join(",") || "none") + ". These are the ONLY correct values. Do not recalculate.");
+    lines.push("VERIFY BEFORE WRITING: Soul Urge=" + formatNum(n.soulUrge) + ", Expression=" + formatNum(n.expression) + ", Personality=" + formatNum(n.personality) + ", Missing=" + (n.missing.join(",") || "none") + ". These are the ONLY correct values. Do not recalculate.");
     lines.push(JSON.stringify({
       cosmicSnapshot: "3 sentences. Weave Life Path " + n.lifePath + ", Personal Year " + n.personalYear + ", and dominant plane (" + n.dominantPlane + ") into a single thematic arc for " + name + ".",
 
       numerology: {
         lifePath: {
-          number: n.lifePath,
+          number: formatNum(n.lifePath),
           title: "3-word evocative title",
           essence: "1 sentence on soul blueprint",
           reading: "4 sentences on purpose, gifts, soul contract. Use name " + name + ". Reference Phillips master number status if applicable.",
           shadow: "2 sentences on the ego trap and unconscious pattern",
           gifts: "1 sentence listing core gifts"
         },
-        expression: { number: n.expression, title: "3-word title", reading: "3 sentences on natural talents and destiny role", shadow: "1 sentence" },
-        soulUrge: { number: n.soulUrge, title: "3-word title", reading: "3 sentences on deepest heart desire and soul fuel", shadow: "1 sentence" },
-        personality: { number: n.personality, title: "3-word title", reading: "2 sentences on how the world perceives them" },
-        birthday: { number: n.birthday, title: "2-word title", reading: "2 sentences on the special gift of this birthday" },
-        maturity: { number: n.maturity, reading: "2 sentences on what this soul is growing into after age 45" },
+        expression: { number: formatNum(n.expression), title: "3-word title", reading: "3 sentences on natural talents and destiny role", shadow: "1 sentence" },
+        soulUrge: { number: formatNum(n.soulUrge), title: "3-word title", reading: "3 sentences on deepest heart desire and soul fuel", shadow: "1 sentence" },
+        personality: { number: formatNum(n.personality), title: "3-word title", reading: "2 sentences on how the world perceives them" },
+        birthday: { number: formatNum(n.birthday), title: "2-word title", reading: "2 sentences on the special gift of this birthday" },
+        maturity: { number: formatNum(n.maturity), reading: "2 sentences on what this soul is growing into after age 45" },
 
         bridgeNumbers: {
           lifeExpBridge: n.bridgeLifeExp,
