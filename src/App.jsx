@@ -143,7 +143,13 @@ function buildPrompt(p, tier) {
     "North Node: " + (p.natalNorthNode || "Not provided"),
     "Chiron: " + (p.natalChiron || "Not provided"),
     "Shadow themes: " + (Array.isArray(p.shadowThemes) ? p.shadowThemes.join(", ") : p.shadowThemes || "Not specified"),
-    "Goals: " + (p.goals || "Not specified"),
+    "Shadow goal: " + (p.shadowGoal || "Not specified"),
+    "Shadow depth readiness: " + (p.shadowDepth || 5) + "/10",
+    "Childhood wound: " + (p.childhoodWound || "Not shared"),
+    "Chakra focus: " + (p.chakraFocus && p.chakraFocus.length ? p.chakraFocus.join(", ") : "Not specified"),
+    "Meditation experience: " + (p.meditationExp || "Not specified"),
+    "Meditation focus: " + (p.meditationFocus && p.meditationFocus.length ? p.meditationFocus.join(", ") : "Not specified"),
+    "Intentions: " + (p.goals || "Not specified"),
     "",
   ];
 
@@ -173,58 +179,61 @@ function buildPrompt(p, tier) {
       soulMessage: "8-10 sentences written directly to " + name + ". Weave Life Path " + n.lifePath + ", Expression " + n.expression + ", Personal Year " + n.personalYear + ". Speak to the soul. End with one sentence of pure truth."
     }));
   } else {
-    lines.push("Generate ALL of these JSON fields with full depth:");
+    lines.push("Generate ALL of these JSON fields:");
     lines.push(JSON.stringify({
-      cosmicSnapshot: "3-4 sentence poetic opening naming the central theme. Reference " + name + " and Life Path " + n.lifePath + ".",
+      cosmicSnapshot: "2-3 sentence poetic opening naming the central theme for " + name + " with Life Path " + n.lifePath + ".",
       numerology: {
-        lifePath: { number: n.lifePath, title: "title", essence: "one sentence", reading: "5-6 sentences", shadow: "3-4 sentences on ego traps", gifts: "2-3 sentences on unique gifts" },
-        expression: { number: n.expression, title: "title", reading: "4-5 sentences on natural talents" },
-        soulUrge: { number: n.soulUrge, title: "title", reading: "4-5 sentences on deepest desire" },
-        personality: { number: n.personality, title: "title", reading: "3-4 sentences on first impression" },
-        birthday: { number: n.birthday, title: "title", reading: "3 sentences on this special talent" },
-        personalYear: { number: n.personalYear, reading: "5-6 sentences on Personal Year " + n.personalYear + " for " + name + " — their specific Active Pinnacle " + n.activePinnacle + " and what this year is asking" },
-        maturity: { number: n.maturity, reading: "3 sentences on the energy emerging after age 40" },
-        missing: { numbers: n.missing, reading: "3-4 sentences on karmic lessons of missing numbers: " + n.missing.join(", ") },
+        lifePath: { number: n.lifePath, title: "evocative 3-word title", essence: "one sentence", reading: "3-4 sentences on soul purpose and highest expression", shadow: "2 sentences on ego trap" },
+        expression: { number: n.expression, title: "title", reading: "3 sentences on natural talents" },
+        soulUrge: { number: n.soulUrge, title: "title", reading: "3 sentences on deepest private desire" },
+        personality: { number: n.personality, title: "title", reading: "2-3 sentences on outer impression" },
+        birthday: { number: n.birthday, title: "title", reading: "2 sentences on this special gift" },
+        personalYear: { number: n.personalYear, reading: "3 sentences on Personal Year " + n.personalYear + " for " + name + " — Pinnacle " + n.activePinnacle + " context" },
+        maturity: { number: n.maturity, reading: "2 sentences on the energy emerging after 40" },
+        missing: { numbers: n.missing, reading: "2 sentences on karmic lessons of: " + (n.missing.join(", ") || "none") },
         karmicDebts: n.karmicDebts.length ? n.karmicDebts.join(", ") : null,
-        karmicReading: n.karmicDebts.length ? "3-4 sentences on karmic debt " + n.karmicDebts.join(", ") + " — what was unlearned and how this life completes it" : null,
-        pinnacles: "4-5 sentences weaving all four pinnacles " + n.pinnacles.join(", ") + " into a life arc. Which is active now? What does it ask?",
-        activeTiming: "4-5 sentences on THIS exact moment — Pinnacle " + n.activePinnacle + ", Personal Year " + n.personalYear + ". What is converging right now for " + name + "?",
+        karmicReading: n.karmicDebts.length ? "2-3 sentences on karmic debt " + n.karmicDebts.join(", ") : null,
+        pinnacles: "3 sentences on pinnacles arc " + n.pinnacles.join(", ") + " — which is active and what it asks",
+        activeTiming: "3 sentences on this exact convergence — Pinnacle " + n.activePinnacle + ", Personal Year " + n.personalYear + " for " + name,
       },
       astrology: {
-        sunReading: "4-5 sentences on " + (p.natalSun || n.sunSign) + " Sun and how it interplays with Life Path " + n.lifePath,
-        moonReading: "4-5 sentences on " + (p.natalMoon || "the Moon placement") + " — emotional body, instinctive reactions, what the soul needs to feel safe",
-        risingReading: "3-4 sentences on Rising sign " + (p.natalRising || "not provided") + " and Personality Number " + n.personality,
-        northNodeReading: "3-4 sentences on North Node in " + (p.natalNorthNode || "not provided") + " — soul evolutionary direction cross-referenced with Life Path " + n.lifePath,
-        chironReading: "3-4 sentences on Chiron in " + (p.natalChiron || "not provided") + " — the sacred wound and healer gift",
+        sunReading: "3 sentences on " + (p.natalSun || n.sunSign) + " Sun + Life Path " + n.lifePath,
+        moonReading: "3 sentences on " + (p.natalMoon || "Moon") + " — emotional needs and inner world",
+        risingReading: "2-3 sentences on " + (p.natalRising || "Rising") + " — outer mask, Personality " + n.personality,
+        northNodeReading: "2-3 sentences on North Node " + (p.natalNorthNode || "") + " — soul direction",
+        chironReading: "2-3 sentences on Chiron " + (p.natalChiron || "") + " — wound and healer gift",
+        innerPlanets: "2-3 sentences synthesizing Mercury " + (p.natalMercury||"") + ", Venus " + (p.natalVenus||"") + ", Mars " + (p.natalMars||""),
+        outerPlanets: "2 sentences on Jupiter " + (p.natalJupiter||"") + " and Saturn " + (p.natalSaturn||""),
+        mc: (p.natalHouse10 ? "2 sentences on MC in " + p.natalHouse10 + " — public calling" : null),
       },
       chineseZodiac: {
         sign: n.chinese.element + " " + n.chinese.animal + " (" + n.chinese.polarity + ")",
-        reading: "4-5 sentences on this specific " + n.chinese.element + " " + n.chinese.animal,
-        crossReference: "3-4 sentences on how this Chinese zodiac energy intersects with Life Path " + n.lifePath,
+        reading: "3 sentences on " + n.chinese.element + " " + n.chinese.animal,
+        crossReference: "2 sentences crossing Life Path " + n.lifePath + " with this Chinese archetype",
       },
       shadowWork: {
-        coreWound: "4-5 sentences on the central shadow thread. Specific and precise. Connect to their numbers.",
-        origin: "4-5 sentences on where this wound originated and why it was adaptive",
-        theGold: "3-4 sentences on what becomes available when this shadow integrates",
-        prompts: ["Journal prompt 1 specific to their data", "Prompt 2", "Prompt 3 — somatic", "Prompt 4 — relationship", "Prompt 5 — the hardest one they will want to skip"]
+        coreWound: "3 sentences on the central shadow thread — specific, connected to their numbers",
+        origin: "3 sentences on where this wound came from",
+        theGold: "2-3 sentences on what becomes available when integrated",
+        prompts: ["Specific journal prompt 1", "Prompt 2", "Somatic prompt 3", "Relationship prompt 4", "The one they will want to skip"]
       },
       holisticSynthesis: {
-        corePattern: "5-6 sentences — the ONE thread running through every layer of this chart. Not a list — a synthesis.",
-        greatestGift: "3-4 sentences on the most exceptional gift in this chart",
-        deepestChallenge: "3-4 sentences on the central tension between key energies",
-        soulSignature: "2-3 sentences — the essence of " + name + " at soul level",
+        corePattern: "4 sentences — the ONE thread running through every layer. A true synthesis, not a list.",
+        greatestGift: "2-3 sentences on the most exceptional gift in this chart",
+        deepestChallenge: "2-3 sentences on the central tension",
+        soulSignature: "2 sentences — the essence of " + name + " at soul level",
       },
-      soulMessage: "8-10 sentences written directly to " + name + ". Weave Life Path " + n.lifePath + ", Expression " + n.expression + ", Personal Year " + n.personalYear + ", core pattern, deepest challenge, greatest gift. Speak to the soul. End with one sentence of pure truth.",
+      soulMessage: "5-6 sentences written directly to " + name + ". Weave Life Path " + n.lifePath + ", shadow, gift, Personal Year " + n.personalYear + ". End with one line of pure truth.",
       ...(n.hasCurrent ? { nameEvolution: {
         birthName: n.fullName,
         currentName: n.currentFull,
         expressionShift: n.expression + " → " + n.currentExpression,
         soulUrgeShift: n.soulUrge + " → " + n.currentSoulUrge,
         personalityShift: n.personality + " → " + n.currentPersonality,
-        whatYouLeftBehind: "4-5 sentences on the numerological energy of the birth name — what gifts and wounds were encoded there",
-        whatYouSteppedInto: "4-5 sentences on the current name energy — what new soul contract was activated",
-        alignment: "3-4 sentences — was this name change a soul-aligned expansion or a contraction? What does the numerology reveal about why it happened?",
-        integration: "3-4 sentences on how to honor both names — the root and the current chapter"
+        whatYouLeftBehind: "3 sentences on the birth name energy",
+        whatYouSteppedInto: "3 sentences on the current name energy",
+        alignment: "2-3 sentences — expansion or contraction?",
+        integration: "2 sentences on honoring both"
       }} : {})
     }));
   }
@@ -884,36 +893,29 @@ export default function App() {
               <TTA l="Major Aspects or Patterns — Optional" v={person.natalAspects} s={v => upd({natalAspects:v})} p="e.g. Sun conjunct Saturn, T-square in cardinal signs, stellium in 8th house…" rows={2} />
 
               <GD label="Shadow Work" />
-              <p style={{fontSize:12,color:"rgba(255,255,255,.35)",marginBottom:12,fontStyle:"italic",lineHeight:1.7}}>🌑 The shadow is not what is wrong with you — it is what has been unwitnessed. These selections directly shape the shadow work section of your reading.</p>
-              <MP label="Shadow themes active in your life" items={SHADOW_THEMES} selected={person.shadowThemes} onChange={v => upd({shadowThemes:v})} color="#9B7ED4" />
-              <TTA l="Recurring patterns or cycles" v={person.recurringPatterns} s={v => upd({recurringPatterns:v})} p="e.g. always attracting unavailable people, self-sabotage right before success…" rows={3} />
-              <TTA l="Earliest wound that still echoes — Optional" v={person.childhoodWound} s={v => upd({childhoodWound:v})} p="A few words is enough — only what feels safe" rows={2} />
-              <div style={{marginBottom:16}}>
-                <Lbl c="Readiness to look at harder material (1–10)" />
-                <p style={{fontSize:11,color:"rgba(255,255,255,.3)",marginBottom:8,fontStyle:"italic"}}>Calibrates depth and tone of the shadow section</p>
-                <div style={{display:"flex",alignItems:"center",gap:12}}>
-                  <input type="range" min={1} max={10} value={person.shadowDepth||5} onChange={e => upd({shadowDepth:Number(e.target.value)})} style={{flex:1,accentColor:"#9B7ED4"}} />
-                  <div style={{minWidth:32,height:32,borderRadius:"50%",background:"rgba(155,126,212,.2)",border:"1px solid rgba(155,126,212,.4)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Cinzel',serif",color:"#9B7ED4",fontSize:13}}>{person.shadowDepth||5}</div>
+              <p style={{fontSize:12,color:"rgba(255,255,255,.32)",marginBottom:14,fontStyle:"italic",lineHeight:1.8}}>🌑 The shadow is not what is wrong with you — it is what has been unwitnessed. Your selections shape the depth and focus of this section.</p>
+              <MP label="Shadow themes active in your life right now" items={SHADOW_THEMES} selected={person.shadowThemes} onChange={v => upd({shadowThemes:v})} color="#9B7ED4" />
+              <TTA l="Earliest wound that still echoes — Optional" v={person.childhoodWound} s={v => upd({childhoodWound:v})} p="A few words is enough. Only what feels safe to share." rows={2} />
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:16,alignItems:"end"}}>
+                <TS l="Primary shadow goal" v={person.shadowGoal} s={v => upd({shadowGoal:v})} opts={[{v:"",l:"— Select —"},{v:"patterns",l:"Understand repeating patterns"},{v:"release",l:"Release what no longer serves"},{v:"child",l:"Heal the inner child"},{v:"reclaim",l:"Reclaim disowned parts"},{v:"integrate",l:"Integrate light and shadow"},{v:"beginning",l:"Just beginning"}]} />
+                <div>
+                  <Lbl c={"Depth readiness: " + (person.shadowDepth||5) + " / 10"} />
+                  <p style={{fontSize:10,color:"rgba(255,255,255,.25)",marginBottom:8,fontStyle:"italic"}}>Calibrates tone of the shadow section</p>
+                  <input type="range" min={1} max={10} value={person.shadowDepth||5} onChange={e => upd({shadowDepth:Number(e.target.value)})} style={{width:"100%",accentColor:"#9B7ED4"}} />
                 </div>
               </div>
-              <TS l="Shadow work goal" v={person.shadowGoal} s={v => upd({shadowGoal:v})} opts={[{v:"patterns",l:"Understand why I keep repeating patterns"},{v:"release",l:"Release what no longer serves"},{v:"child",l:"Heal the inner child"},{v:"reclaim",l:"Reclaim disowned parts of myself"},{v:"integrate",l:"Fully integrate light and shadow"},{v:"beginning",l:"Just beginning — not sure yet"}]} />
 
-              <GD label="Meditation and Sound Healing" />
-              <MP label="Meditation focus areas" items={MED_FOCUS} selected={person.meditationFocus} onChange={v => upd({meditationFocus:v})} color="#7EC4D4" />
-              <TS l="Experience level" v={person.meditationExp} s={v => upd({meditationExp:v})} opts={[{v:"none",l:"None — completely new"},{v:"curious",l:"Tried a few times"},{v:"beginner",l:"Occasional practice"},{v:"intermediate",l:"Regular practice"},{v:"advanced",l:"Deep daily practice"}]} />
-              <TTA l="Current practice — Optional" v={person.currentPractice} s={v => upd({currentPractice:v})} p="Journaling, breathwork, yoga, prayer, cold plunge, ritual…" rows={2} />
-
-              <GD label="Chakra Focus" />
-              <p style={{fontSize:11,color:"rgba(255,255,255,.32)",marginBottom:10,fontStyle:"italic"}}>Select centers that feel blocked, overactive, or calling for attention</p>
+              <GD label="Energetic Focus" />
+              <p style={{fontSize:11,color:"rgba(255,255,255,.32)",marginBottom:10,fontStyle:"italic"}}>Select chakra centers that feel blocked, overactive, or calling for attention</p>
               <ChakraPicker selected={person.chakraFocus} onChange={v => upd({chakraFocus:v})} />
-
-              <GD label="Sound Healing Frequencies" />
-              <MP label="Solfeggio frequencies you are drawn to" items={SOLFEGGIO} selected={person.freqInterest} onChange={v => upd({freqInterest:v})} color="#C8A96E" cols={1} />
-              <MP label="Binaural brainwave states" items={BINAURAL} selected={person.binauralInterest} onChange={v => upd({binauralInterest:v})} color="#D47E9B" cols={1} />
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+                <TS l="Meditation experience" v={person.meditationExp} s={v => upd({meditationExp:v})} opts={[{v:"",l:"— Select —"},{v:"none",l:"None — completely new"},{v:"curious",l:"Tried a few times"},{v:"beginner",l:"Occasional practice"},{v:"intermediate",l:"Regular practice"},{v:"advanced",l:"Deep daily practice"}]} />
+                <TS l="Primary meditation focus" v={person.meditationFocus[0]||""} s={v => upd({meditationFocus:v?[v]:[]})} opts={[{v:"",l:"— Select —"},{v:"inner-child",l:"Inner Child Healing"},{v:"shadow",l:"Shadow Integration"},{v:"nervous",l:"Nervous System"},{v:"grief",l:"Grief & Release"},{v:"worth",l:"Self-Worth"},{v:"abundance",l:"Abundance"},{v:"purpose",l:"Purpose & Direction"},{v:"relationships",l:"Relationship Healing"},{v:"ancestral",l:"Ancestral Clearing"},{v:"intuition",l:"Intuition Development"},{v:"somatic",l:"Somatic & Body"},{v:"sleep",l:"Sleep & Restoration"}]} />
+              </div>
             </>}
 
             <GD label="Intentions" />
-            <TTA l="What are you most hoping to understand or shift?" v={person.goals} s={v => upd({goals:v})} p="Share anything — patterns, questions, what feels stuck, what you're moving toward…" rows={4} />
+            <TTA l="What are you most hoping to understand or receive from this reading?" v={person.goals} s={v => upd({goals:v})} p="What feels most alive, stuck, or calling right now…" rows={3} />
           </div>
 
           <div style={{ background:"rgba(255,255,255,.015)", border:"1px solid rgba(200,169,110,.1)", borderRadius:8, padding:20, marginBottom:20 }}>
