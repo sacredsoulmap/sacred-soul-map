@@ -668,7 +668,7 @@ Return ONLY a valid JSON object — no markdown, no backticks, no explanation. U
     "capstone": "2-3 sentences on the Capstone letter (${n.capstone?.char||'N/A'}) — how ${name} finishes what they start and how they wrap up life chapters",
     "firstVowel": "2-3 sentences on the First Vowel (${n.firstVowel?.char||'N/A'}) — the hidden inner drive that pulses beneath everything",
     "lifeCycles": "3-4 sentences weaving all three Life Cycles (${n.lifeCycles?.first?.number}, ${n.lifeCycles?.second?.number}, ${n.lifeCycles?.third?.number}) into the arc of ${name}'s three great life periods. Which cycle are they in now and what does it ask?",
-    "isolatedNumbers": "${n.isolatedNums?.length?('ISOLATED NUMBERS: '+n.isolatedNums.join(', ')+'. For EACH isolated number: (1) what this energy represents that feels hard to access, (2) the Philips remedy — which neighboring numbers to develop and why, (3) 2-3 concrete integration practices, (4) what becomes available when integrated.'):'null'}",
+    "isolatedNumbers": "${n.isolatedNums?.length?'ISOLATED NUMBERS detected: '+n.isolatedNums.join(', ')+'. For each, write: what this energy feels hard to access, the Philips remedy, 2-3 practices, and what opens up when integrated.':'null'}",
     "activeTiming": "Write 4-5 sentences on the precise current moment: ${name} is in Pinnacle ${n.activePinnacleNum} (${n.activePinnacle}), their active challenge is ${n.activeChallenge}, Personal Year ${n.personalYear} in the ${n.pyPhase}. What specific convergence is happening RIGHT NOW at the intersection of these three timing layers? What is being asked, what is completing, what new door is opening?",
     "intensityNumbers": "2-3 sentences on the intensity numbers (${n.intensityNums.map(x=>x.num).join(",")}) and what their high frequency in the name chart means for personality and drive",
     "pinnacles": "4-5 sentences weaving all four pinnacles (${n.pinnacles.join(",")}) into a narrative arc of ${name}'s life chapters. Which pinnacle are they in now? What does it ask of them?",
@@ -1708,3 +1708,4 @@ export default function App(){
     </>
   );
 }
+
