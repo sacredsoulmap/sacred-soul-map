@@ -71,6 +71,25 @@ const ARROW_DEFS = [
   { id:"intel", name:"Arrow of the Intellect",    nums:[3,6,9], desc:"High mental capacity, creative intelligence, love of learning" },
 ];
 
+
+function calcSunSign(month, day) {
+  const m = Number(month), d = Number(day);
+  if (!m || !d) return "";
+  if ((m === 3 && d >= 21) || (m === 4 && d <= 19)) return "Aries";
+  if ((m === 4 && d >= 20) || (m === 5 && d <= 20)) return "Taurus";
+  if ((m === 5 && d >= 21) || (m === 6 && d <= 20)) return "Gemini";
+  if ((m === 6 && d >= 21) || (m === 7 && d <= 22)) return "Cancer";
+  if ((m === 7 && d >= 23) || (m === 8 && d <= 22)) return "Leo";
+  if ((m === 8 && d >= 23) || (m === 9 && d <= 22)) return "Virgo";
+  if ((m === 9 && d >= 23) || (m === 10 && d <= 22)) return "Libra";
+  if ((m === 10 && d >= 23) || (m === 11 && d <= 21)) return "Scorpio";
+  if ((m === 11 && d >= 22) || (m === 12 && d <= 21)) return "Sagittarius";
+  if ((m === 12 && d >= 22) || (m === 1 && d <= 19)) return "Capricorn";
+  if ((m === 1 && d >= 20) || (m === 2 && d <= 18)) return "Aquarius";
+  if ((m === 2 && d >= 19) || (m === 3 && d <= 20)) return "Pisces";
+  return "";
+}
+
 // ─── PLANES OF EXPRESSION MAP (David A. Phillips) ───────
 // Each letter maps to one of four planes of expression
 const PLANE_MAP = {
@@ -580,16 +599,20 @@ async function sendEmail(toEmail, toName, tierName, reading) {
 const TIERS = [
   { id: "soul-spark", name: "Soul Spark", price: "$47", color: "#C8A96E",
     desc: "6 core numbers · Chinese zodiac · Soul message",
-    includes: ["Life Path · Expression · Soul Urge", "Personal Year", "Chinese Zodiac", "Soul Message"] },
+    includes: ["Life Path · Expression · Soul Urge", "Personal Year timing", "Chinese Zodiac", "Soul Message"],
+    maxPeople: 0 },
   { id: "cosmic-self", name: "Cosmic Self", price: "$97", color: "#9B7ED4", popular: true,
-    desc: "Complete Phillips system · Natal chart · Shadow work · Holistic synthesis",
-    includes: ["Everything in Soul Spark", "All Phillips depth numbers", "Arrows of Pythagoras", "Chinese Zodiac 3-layer portrait", "Shadow Work + 5 prompts", "Holistic Synthesis + Soul Message"] },
+    desc: "Complete Phillips system · Shadow work · Holistic synthesis",
+    includes: ["Everything in Soul Spark", "All Phillips depth numbers", "Arrows of Pythagoras", "Chinese Zodiac 3-layer portrait", "Shadow Work + 5 prompts", "Holistic Synthesis + Soul Message"],
+    maxPeople: 0 },
   { id: "soul-connections", name: "Soul Connections", price: "$197", color: "#D47E9B",
-    desc: "Full reading for you + one other + compatibility",
-    includes: ["Full Cosmic Self for both", "Compatibility analysis", "Soul contract reading", "Shared shadow patterns"] },
+    desc: "Full reading for you + 1 other person + compatibility",
+    includes: ["Full Cosmic Self for both people", "Numerology compatibility reading", "Relationship dynamic analysis", "Soul contract between the two"],
+    maxPeople: 1 },
   { id: "full-realm", name: "Full Realm", price: "$397", color: "#7EC4D4",
     desc: "Up to 5 people · Full readings + group dynamics",
-    includes: ["Full Cosmic Self for up to 5", "Group arrow analysis", "Collective shadow", "Missing group energies"] },
+    includes: ["Full Cosmic Self for up to 5 people", "Compatibility reading for each", "Group arrow analysis", "Collective shadow + missing energies"],
+    maxPeople: 4 },
 ];
 
 // ─── FORM OPTIONS ─────────────────────────────────────────
@@ -638,10 +661,9 @@ const emptyP = () => ({
   currentFirst:"", currentMiddle:"", currentLast:"",
   bMonth:"", bDay:"", bYear:"", timeKnown:"", bHour:"", bMinute:"",
   bCity:"", bState:"", bCountry:"",
-  sunSign:"",
   shadowThemes:[], childhoodWound:"", shadowDepth:5, shadowGoal:"",
   goals:"",
-  people:[{ firstName:"", lastName:"", bMonth:"", bDay:"", bYear:"" }]
+  people:[{ firstName:"", lastName:"", bMonth:"", bDay:"", bYear:"", relationship:"" }]
 });
 
 // ─── UI PRIMITIVES ────────────────────────────────────────
@@ -1079,27 +1101,32 @@ export default function App() {
               </div>
             </div>
 
-            {isFull && <>
-              <GD label="Additional People — Relationship & Compatibility Layer" />
-              <p style={{fontSize:11,color:"rgba(255,255,255,.32)",marginBottom:14,fontStyle:"italic",lineHeight:1.8}}>Add up to 2 people (partner, child, parent, close friend) to receive a numerology compatibility layer in your reading. First name + DOB is enough.</p>
+            {hasPeople && <>
+              <GD label="Additional People — Compatibility Reading" />
+              <p style={{fontSize:11,color:"rgba(255,255,255,.32)",marginBottom:14,fontStyle:"italic",lineHeight:1.8}}>
+                {tierId === "soul-connections" ? "Add 1 person for a full compatibility reading — partner, child, parent, or close friend." : "Add up to 4 additional people (5 total including you) for a full group compatibility reading."}
+              </p>
               {(person.people||[]).map((p2, i) => (
                 <div key={i} style={{background:"rgba(155,126,212,.04)",border:"1px solid rgba(155,126,212,.15)",borderRadius:7,padding:"14px 16px",marginBottom:12}}>
                   <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
-                    <div style={{fontFamily:"'Cinzel',serif",fontSize:10,letterSpacing:".14em",color:"#9B7ED4",textTransform:"uppercase"}}>Person {i+1}</div>
-                    {i > 0 && <button onClick={() => upd({people:(person.people||[]).filter((_,j)=>j!==i)})} style={{background:"transparent",border:"none",color:"rgba(255,255,255,.25)",cursor:"pointer",fontSize:11}}>✕ Remove</button>}
+                    <div style={{fontFamily:"'Cinzel',serif",fontSize:10,letterSpacing:".14em",color:"#9B7ED4",textTransform:"uppercase"}}>
+                      {tierId === "soul-connections" ? "Other Person" : "Person " + (i + 2)}
+                    </div>
+                    <button onClick={() => upd({people:(person.people||[]).filter((_,j)=>j!==i)})} style={{background:"transparent",border:"none",color:"rgba(255,255,255,.25)",cursor:"pointer",fontSize:11,fontFamily:"sans-serif"}}>✕ Remove</button>
                   </div>
                   <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
                     <TI l="First Name" v={p2.firstName} s={v => { const arr=[...(person.people||[])]; arr[i]={...arr[i],firstName:v}; upd({people:arr}); }} p="Name" />
                     <TI l="Last Name (optional)" v={p2.lastName} s={v => { const arr=[...(person.people||[])]; arr[i]={...arr[i],lastName:v}; upd({people:arr}); }} p="Surname" />
                   </div>
-                  <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 2fr",gap:10}}>
+                  <TS l="Relationship to You" v={p2.relationship} s={v => { const arr=[...(person.people||[])]; arr[i]={...arr[i],relationship:v}; upd({people:arr}); }} opts={[{v:"",l:"— Select —"},{v:"Romantic Partner",l:"💑 Romantic Partner"},{v:"Spouse",l:"💍 Spouse"},{v:"Ex Partner",l:"💔 Ex Partner"},{v:"Child",l:"👶 Child"},{v:"Parent",l:"👪 Parent"},{v:"Sibling",l:"🤝 Sibling"},{v:"Best Friend",l:"✨ Best Friend"},{v:"Close Friend",l:"🌟 Close Friend"},{v:"Business Partner",l:"💼 Business Partner"},{v:"Colleague",l:"🏢 Colleague"},{v:"Other",l:"Other"}]} />
+                  <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 2fr",gap:10,marginTop:6}}>
                     <TS l="Birth Month" v={p2.bMonth} s={v => { const arr=[...(person.people||[])]; arr[i]={...arr[i],bMonth:v}; upd({people:arr}); }} opts={MONTHS} />
                     <TS l="Day" v={p2.bDay} s={v => { const arr=[...(person.people||[])]; arr[i]={...arr[i],bDay:v}; upd({people:arr}); }} opts={DAYS} />
                     <TS l="Year" v={p2.bYear} s={v => { const arr=[...(person.people||[])]; arr[i]={...arr[i],bYear:v}; upd({people:arr}); }} opts={YEARS} />
                   </div>
                 </div>
               ))}
-              {(person.people||[]).length < 2 && <button onClick={() => upd({people:[...(person.people||[]),{firstName:"",lastName:"",bMonth:"",bDay:"",bYear:""}]})} style={{background:"transparent",border:"1px dashed rgba(155,126,212,.35)",color:"rgba(155,126,212,.6)",fontFamily:"'Cinzel',serif",fontSize:10,letterSpacing:".14em",textTransform:"uppercase",padding:"10px 20px",borderRadius:5,cursor:"pointer",width:"100%",marginBottom:4}}>+ Add Another Person</button>}
+              {(person.people||[]).length < maxPeople && <button onClick={() => upd({people:[...(person.people||[]),{firstName:"",lastName:"",bMonth:"",bDay:"",bYear:"",relationship:""}]})} style={{background:"transparent",border:"1px dashed rgba(155,126,212,.35)",color:"rgba(155,126,212,.6)",fontFamily:"'Cinzel',serif",fontSize:10,letterSpacing:".14em",textTransform:"uppercase",padding:"10px 20px",borderRadius:5,cursor:"pointer",width:"100%",marginBottom:4}}>+ Add {tierId === "soul-connections" ? "This Person" : "Another Person"}</button>}
             </>}
 
             <GD label="Intentions" />
