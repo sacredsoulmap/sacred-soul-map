@@ -649,7 +649,7 @@ function ChakraPicker({selected, onChange}) {
 }
 
 const emptyP = () => ({
-  pronouns:"", preferredName:"", legalFirst:"", legalMiddle:"", legalLast:"",
+  preferredName:"", legalFirst:"", legalMiddle:"", legalLast:"",
   currentFirst:"", currentMiddle:"", currentLast:"",
   bMonth:"", bDay:"", bYear:"", timeKnown:"", bHour:"", bMinute:"",
   bCity:"", bState:"", bCountry:"",
@@ -1051,10 +1051,7 @@ export default function App() {
           <div style={{ background:"rgba(255,255,255,.015)", border:"1px solid "+tier.color+"22", borderRadius:9, padding:"22px 20px", marginBottom:18, position:"relative", overflow:"hidden" }}>
             <div style={{ position:"absolute", top:0, left:0, right:0, height:2, background:"linear-gradient(to right,transparent,"+tier.color+",transparent)" }} />
 
-            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
-              <TI l="Preferred Name" v={person.preferredName} s={v => upd({preferredName:v})} p="What you go by" />
-              <TS l="Pronouns" v={person.pronouns} s={v => upd({pronouns:v})} opts={[{v:"she/her",l:"She / Her"},{v:"he/him",l:"He / Him"},{v:"they/them",l:"They / Them"}]} />
-            </div>
+            <TI l="Preferred Name" v={person.preferredName} s={v => upd({preferredName:v})} p="What you go by" />
 
             <GD label="Full Legal Birth Name" />
             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:10 }}>
@@ -1179,11 +1176,79 @@ export default function App() {
           </div>
 
           <div style={{ textAlign:"center" }}>
-            <button onClick={submit} disabled={!legalConsent} style={{ opacity:legalConsent?1:.4, cursor:legalConsent?"pointer":"not-allowed", background:"linear-gradient(135deg,"+tier.color+"22,"+tier.color+"40)", border:"1px solid "+tier.color, color:tier.color, fontFamily:"'Cinzel',serif", fontSize:12, letterSpacing:".2em", textTransform:"uppercase", padding:"15px 46px", borderRadius:4, transition:"all .3s" }}>
-              Generate My Reading →
+            <button onClick={() => legalConsent && setStep("confirm")} disabled={!legalConsent} style={{ opacity:legalConsent?1:.4, cursor:legalConsent?"pointer":"not-allowed", background:"linear-gradient(135deg,"+tier.color+"22,"+tier.color+"40)", border:"1px solid "+tier.color, color:tier.color, fontFamily:"'Cinzel',serif", fontSize:12, letterSpacing:".2em", textTransform:"uppercase", padding:"15px 46px", borderRadius:4, transition:"all .3s" }}>
+              Review &amp; Confirm →
             </button>
-            <p style={{ marginTop:10, fontSize:11, color:"rgba(255,255,255,.2)", fontStyle:"italic" }}>~45–60 seconds for the complete reading.</p>
+            <p style={{ marginTop:10, fontSize:11, color:"rgba(255,255,255,.2)", fontStyle:"italic" }}>You'll confirm your details before we calculate.</p>
           </div>
+        </div>}
+
+        {/* CONFIRM */}
+        {step === "confirm" && tier && <div style={{ animation:"fu .5s ease both", maxWidth:560, margin:"0 auto" }}>
+          <div style={{ textAlign:"center", marginBottom:28 }}>
+            <div style={{ fontFamily:"'Cinzel',serif", fontSize:9, letterSpacing:".3em", color:"#C8A96E", textTransform:"uppercase", marginBottom:8, opacity:.7 }}>Before We Calculate</div>
+            <h2 style={{ fontFamily:"'Cinzel Decorative',serif", fontSize:20, color:"#fff", marginBottom:6 }}>Confirm Your Details</h2>
+            <p style={{ fontSize:12, color:"rgba(255,255,255,.35)", fontStyle:"italic" }}>Numerology is precise — a single digit difference changes everything. Please verify each field below is exactly correct.</p>
+          </div>
+
+          <div style={{ background:"rgba(255,255,255,.015)", border:"1px solid rgba(200,169,110,.18)", borderRadius:10, padding:"22px 24px", marginBottom:20 }}>
+
+            {/* Birth Name */}
+            <div style={{ marginBottom:20, paddingBottom:20, borderBottom:"1px solid rgba(255,255,255,.06)" }}>
+              <div style={{ fontFamily:"'Cinzel',serif", fontSize:9, letterSpacing:".2em", color:"#C8A96E", textTransform:"uppercase", marginBottom:8 }}>Full Legal Birth Name</div>
+              <div style={{ fontSize:17, color:"#fff", letterSpacing:".04em" }}>
+                {[person.legalFirst, person.legalMiddle, person.legalLast].filter(Boolean).join(" ") || <span style={{color:"rgba(255,255,255,.25)",fontStyle:"italic"}}>Not entered</span>}
+              </div>
+              <div style={{ fontSize:10, color:"rgba(255,255,255,.25)", marginTop:4, fontStyle:"italic" }}>Exactly as it appears on your birth certificate</div>
+            </div>
+
+            {/* Current Name */}
+            {(person.currentFirst || person.currentLast) && <div style={{ marginBottom:20, paddingBottom:20, borderBottom:"1px solid rgba(255,255,255,.06)" }}>
+              <div style={{ fontFamily:"'Cinzel',serif", fontSize:9, letterSpacing:".2em", color:"#C8A96E", textTransform:"uppercase", marginBottom:8 }}>Current Name</div>
+              <div style={{ fontSize:17, color:"#fff", letterSpacing:".04em" }}>
+                {[person.currentFirst || person.legalFirst, person.currentMiddle || person.legalMiddle, person.currentLast || person.legalLast].filter(Boolean).join(" ")}
+              </div>
+            </div>}
+
+            {/* Date of Birth */}
+            <div style={{ marginBottom:20, paddingBottom:20, borderBottom:"1px solid rgba(255,255,255,.06)" }}>
+              <div style={{ fontFamily:"'Cinzel',serif", fontSize:9, letterSpacing:".2em", color:"#C8A96E", textTransform:"uppercase", marginBottom:8 }}>Date of Birth</div>
+              <div style={{ fontSize:17, color:"#fff", letterSpacing:".04em" }}>
+                {person.bMonth && person.bDay && person.bYear
+                  ? person.bMonth + " / " + person.bDay + " / " + person.bYear
+                  : <span style={{color:"rgba(255,255,255,.25)",fontStyle:"italic"}}>Incomplete</span>}
+              </div>
+            </div>
+
+            {/* Birth Time */}
+            <div style={{ marginBottom:20, paddingBottom:20, borderBottom:"1px solid rgba(255,255,255,.06)" }}>
+              <div style={{ fontFamily:"'Cinzel',serif", fontSize:9, letterSpacing:".2em", color:"#C8A96E", textTransform:"uppercase", marginBottom:8 }}>Birth Time</div>
+              <div style={{ fontSize:17, color:"#fff", letterSpacing:".04em" }}>
+                {person.timeKnown === "exact" || person.timeKnown === "approximate"
+                  ? (person.bHour ? person.bHour + ":" + (person.bMinute || "00") : "Time not selected") + (person.timeKnown === "approximate" ? " (approximate)" : "")
+                  : <span style={{color:"rgba(255,255,255,.35)",fontStyle:"italic"}}>Not known — Rising sign will not be calculated</span>}
+              </div>
+            </div>
+
+            {/* Birth Location */}
+            <div>
+              <div style={{ fontFamily:"'Cinzel',serif", fontSize:9, letterSpacing:".2em", color:"#C8A96E", textTransform:"uppercase", marginBottom:8 }}>Birth Location</div>
+              <div style={{ fontSize:17, color:"#fff", letterSpacing:".04em" }}>
+                {[person.bCity, person.bState, person.bCountry].filter(Boolean).join(", ") || <span style={{color:"rgba(255,255,255,.25)",fontStyle:"italic"}}>Not entered</span>}
+              </div>
+            </div>
+
+          </div>
+
+          <div style={{ display:"flex", gap:12, justifyContent:"center", flexWrap:"wrap" }}>
+            <button onClick={() => setStep("form")} style={{ background:"transparent", border:"1px solid rgba(255,255,255,.15)", color:"rgba(255,255,255,.45)", fontFamily:"'Cinzel',serif", fontSize:11, letterSpacing:".15em", textTransform:"uppercase", padding:"13px 28px", borderRadius:4, cursor:"pointer" }}>
+              ← Edit Details
+            </button>
+            <button onClick={submit} style={{ background:"linear-gradient(135deg,"+tier.color+"22,"+tier.color+"40)", border:"1px solid "+tier.color, color:tier.color, fontFamily:"'Cinzel',serif", fontSize:12, letterSpacing:".2em", textTransform:"uppercase", padding:"13px 36px", borderRadius:4, cursor:"pointer", transition:"all .3s" }}>
+              ✦ This is Correct — Generate My Reading
+            </button>
+          </div>
+          <p style={{ textAlign:"center", marginTop:12, fontSize:11, color:"rgba(255,255,255,.2)", fontStyle:"italic" }}>~45–60 seconds for the complete reading.</p>
         </div>}
 
         {/* GENERATING */}
