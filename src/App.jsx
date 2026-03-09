@@ -1209,9 +1209,7 @@ export default function App() {
                 </div>
               ))}
               {(person.people||[]).length < maxPeople && <button onClick={() => upd({people:[...(person.people||[]),{firstName:"",lastName:"",bMonth:"",bDay:"",bYear:"",relationship:""}]})} style={{background:"transparent",border:"1px dashed rgba(155,126,212,.35)",color:"rgba(155,126,212,.6)",fontFamily:"'Cinzel',serif",fontSize:10,letterSpacing:".14em",textTransform:"uppercase",padding:"10px 20px",borderRadius:5,cursor:"pointer",width:"100%",marginBottom:4}}>+ Add {tierId === "soul-connections" ? "This Person" : "Another Person"}</button>}
-            </>}
 
-            {hasPeople && <>
               <GD label="Marriage / Union Date — Optional" />
               <div style={{background:"rgba(200,169,110,.04)",border:"1px solid rgba(200,169,110,.12)",borderRadius:6,padding:"10px 14px",marginBottom:14,fontSize:11,color:"rgba(255,255,255,.45)",fontStyle:"italic",lineHeight:1.8}}>
                 ✦ Your marriage or commitment date carries its own Life Path — the soul purpose and destiny of the union itself. Leave blank if not applicable.
