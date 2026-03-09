@@ -612,7 +612,7 @@ const TIERS = [
     maxPeople: 1 },
   { id: "full-realm", name: "Full Realm", price: "$397", color: "#7EC4D4",
     desc: "Up to 5 people · Full readings + group dynamics",
-    includes: ["Full Cosmic Self for up to 5 people", "Compatibility reading for each", "Group arrow analysis", "Collective shadow + missing energies"],
+    includes: ["Full Cosmic Self for all 5 people", "Individual numerology for each person", "Compatibility reading for every pair", "Group energy + collective shadow"],
     maxPeople: 4 },
 ];
 
@@ -664,7 +664,7 @@ const emptyP = () => ({
   bCity:"", bState:"", bCountry:"",
   shadowThemes:[], childhoodWound:"", shadowDepth:5, shadowGoal:"",
   goals:"",
-  people:[{ firstName:"", lastName:"", bMonth:"", bDay:"", bYear:"", relationship:"" }]
+  people:[]
 });
 
 // ─── UI PRIMITIVES ────────────────────────────────────────
@@ -1105,8 +1105,11 @@ export default function App() {
             {hasPeople && <>
               <GD label="Additional People — Compatibility Reading" />
               <p style={{fontSize:11,color:"rgba(255,255,255,.32)",marginBottom:14,fontStyle:"italic",lineHeight:1.8}}>
-                {tierId === "soul-connections" ? "Add 1 person for a full compatibility reading — partner, child, parent, or close friend." : "Add up to 4 additional people (5 total including you) for a full group compatibility reading."}
+                {tierId === "soul-connections"
+                ? "Add the 1 person you want a compatibility reading with — partner, child, parent, or close friend."
+                : "Add up to 4 additional people (5 total including you). Each receives their own numerology + a compatibility reading with you."}
               </p>
+              {(person.people||[]).length === 0 && <div style={{textAlign:"center",padding:"18px",border:"1px dashed rgba(155,126,212,.2)",borderRadius:7,marginBottom:12,color:"rgba(255,255,255,.25)",fontSize:12,fontStyle:"italic"}}>No people added yet — use the button below to add {tierId === "soul-connections" ? "1 person" : "up to 4 people"}</div>}
               {(person.people||[]).map((p2, i) => (
                 <div key={i} style={{background:"rgba(155,126,212,.04)",border:"1px solid rgba(155,126,212,.15)",borderRadius:7,padding:"14px 16px",marginBottom:12}}>
                   <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
