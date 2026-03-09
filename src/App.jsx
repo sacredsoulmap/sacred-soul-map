@@ -1215,9 +1215,9 @@ export default function App() {
                 ✦ Your marriage or commitment date carries its own Life Path — the soul purpose and destiny of the union itself. Leave blank if not applicable.
               </div>
               <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 2fr",gap:10}}>
-                <TS l="Month" v={person.marriageMonth} s={v => upd({marriageMonth:v})} opts={[{v:"",l:"— Month —"},...MONTHS]} />
-                <TS l="Day" v={person.marriageDay} s={v => upd({marriageDay:v})} opts={[{v:"",l:"— Day —"},...DAYS]} />
-                <TS l="Year" v={person.marriageYear} s={v => upd({marriageYear:v})} opts={[{v:"",l:"— Year —"},...YEARS]} />
+                <TS l="Month" v={person.marriageMonth} s={v => upd({marriageMonth:v})} opts={MONTHS} />
+                <TS l="Day" v={person.marriageDay} s={v => upd({marriageDay:v})} opts={DAYS} />
+                <TS l="Year" v={person.marriageYear} s={v => upd({marriageYear:v})} opts={YEARS} />
               </div>
             </>}
 
