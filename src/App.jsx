@@ -317,10 +317,21 @@ function buildPrompt(p, tier) {
   if (p.childhoodWound) lines.push("Wound shared: " + p.childhoodWound);
   if (p.shadowGoal) lines.push("Shadow goal: " + p.shadowGoal);
   if (p.goals) lines.push("Intentions: " + p.goals);
+  // Marriage date numerology
+  let marriageLP = null;
+  if (p.marriageMonth && p.marriageDay && p.marriageYear) {
+    const mm = Number(p.marriageMonth), md = Number(p.marriageDay), my = Number(p.marriageYear);
+    marriageLP = numReduce(numReduce(mm,false) + numReduce(md,false) + numReduce(digitSum(my),false));
+  }
+
   if (peopleData.length) {
     lines.push("");
     lines.push("ADDITIONAL PEOPLE FOR COMPATIBILITY:");
     peopleData.forEach(pd => lines.push(pd.name + " | Relationship: " + pd.relationship + " | DOB: " + pd.dob + " | Life Path: " + pd.lifePath));
+  }
+  if (marriageLP !== null) {
+    lines.push("");
+    lines.push("MARRIAGE / UNION DATE: " + p.marriageMonth + "/" + p.marriageDay + "/" + p.marriageYear + " | Union Life Path: " + formatNum(marriageLP));
   }
   lines.push("");
   lines.push("Return this exact JSON structure with all fields populated with real content:");
@@ -451,6 +462,12 @@ function buildPrompt(p, tier) {
       tension: "1 sentence on the friction or growth edge in this " + pd.relationship + " dynamic",
       soulLesson: "1 sentence on what this connection is here to teach " + name
     }))} : {}),
+
+    ...(marriageLP !== null ? { marriageUnion: {
+      date: p.marriageMonth + "/" + p.marriageDay + "/" + p.marriageYear,
+      unionLifePath: formatNum(marriageLP),
+      reading: "4 sentences — the Life Path " + formatNum(marriageLP) + " is the soul mission of this union itself. What did these two Life Paths agree to build together? How does the union number interact with each person's individual Life Path? What is the highest potential and the core challenge of this marriage vibration?"
+    }} : {}),
 
     holisticSynthesis: {
       corePattern: "3 sentences — the single thread running through all the numbers for " + name,
@@ -602,6 +619,10 @@ function readingToText(r, name) {
   if (r.personalYear) lines.push("PERSONAL YEAR " + r.personalYear.number + "\n" + (r.personalYear.reading || "") + "\n");
   if (r.chineseZodiac) lines.push("CHINESE ZODIAC — " + r.chineseZodiac.sign + "\n" + (r.chineseZodiac.reading || "") + "\n");
   if (r.sunSign) lines.push("SUN SIGN — " + (r.sunSign.sign||"") + "\n" + (r.sunSign.reading||"") + "\n");
+  if (r.marriageUnion) {
+    lines.push("\n── MARRIAGE / UNION DATE: " + r.marriageUnion.date + " (Life Path " + r.marriageUnion.unionLifePath + ") ──");
+    if (r.marriageUnion.reading) lines.push(r.marriageUnion.reading);
+  }
   if (r.compatibility && r.compatibility.length) {
     lines.push("COMPATIBILITY\n");
     r.compatibility.forEach(c => lines.push(c.name + " (" + (c.relationship||"") + " · Life Path " + c.lifePath + "):\n" + [c.harmony, c.tension, c.soulLesson, c.reading].filter(Boolean).join("\n") + "\n"));
@@ -700,6 +721,7 @@ const emptyP = () => ({
   currentFirst:"", currentMiddle:"", currentLast:"",
   bMonth:"", bDay:"", bYear:"", timeKnown:"", bHour:"", bMinute:"",
   bCity:"", bState:"", bCountry:"",
+  marriageMonth:"", marriageDay:"", marriageYear:"",
   shadowThemes:[], childhoodWound:"", shadowDepth:5, shadowGoal:"",
   goals:"",
   people:[]
@@ -875,6 +897,16 @@ function ReadingView({ reading: r, name, onEmail, emailSt }) {
 
     {r.sunSign && <Sec icon="☀️" title={"Sun Sign — " + r.sunSign.sign} color="#7EC4D4">
       <InfoBlock label={r.sunSign.sign + " Sun"} text={r.sunSign.reading} color="#7EC4D4" />
+    </Sec>}
+    {r.marriageUnion && <Sec icon="💍" title={"Marriage / Union — Life Path " + r.marriageUnion.unionLifePath} color="#D47E9B">
+      <div style={{display:"flex",alignItems:"center",gap:14,marginBottom:14,padding:"10px 14px",background:"rgba(212,126,155,.06)",border:"1px solid rgba(212,126,155,.2)",borderRadius:6}}>
+        <div style={{textAlign:"center",minWidth:54}}>
+          <div style={{fontFamily:"'Cinzel',serif",fontSize:22,color:"#D47E9B",fontWeight:700}}>{r.marriageUnion.unionLifePath}</div>
+          <div style={{fontSize:9,color:"rgba(255,255,255,.3)",letterSpacing:".1em",textTransform:"uppercase"}}>Union LP</div>
+        </div>
+        <div style={{fontSize:11,color:"rgba(255,255,255,.4)",fontStyle:"italic"}}>Marriage date: {r.marriageUnion.date} — the soul purpose and destiny of this union</div>
+      </div>
+      <InfoBlock label="The Soul Mission of This Union" text={r.marriageUnion.reading} color="#D47E9B" />
     </Sec>}
     {r.compatibility && r.compatibility.length > 0 && <Sec icon="✦" title="Compatibility — Numerology Relationship Reading" color="#9B7ED4">
       {r.compatibility.map((c, i) => (
@@ -1177,6 +1209,18 @@ export default function App() {
                 </div>
               ))}
               {(person.people||[]).length < maxPeople && <button onClick={() => upd({people:[...(person.people||[]),{firstName:"",lastName:"",bMonth:"",bDay:"",bYear:"",relationship:""}]})} style={{background:"transparent",border:"1px dashed rgba(155,126,212,.35)",color:"rgba(155,126,212,.6)",fontFamily:"'Cinzel',serif",fontSize:10,letterSpacing:".14em",textTransform:"uppercase",padding:"10px 20px",borderRadius:5,cursor:"pointer",width:"100%",marginBottom:4}}>+ Add {tierId === "soul-connections" ? "This Person" : "Another Person"}</button>}
+            </>}
+
+            {hasPeople && <>
+              <GD label="Marriage / Union Date — Optional" />
+              <div style={{background:"rgba(200,169,110,.04)",border:"1px solid rgba(200,169,110,.12)",borderRadius:6,padding:"10px 14px",marginBottom:14,fontSize:11,color:"rgba(255,255,255,.45)",fontStyle:"italic",lineHeight:1.8}}>
+                ✦ Your marriage or commitment date carries its own Life Path — the soul purpose and destiny of the union itself. Leave blank if not applicable.
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 2fr",gap:10}}>
+                <TS l="Month" v={person.marriageMonth} s={v => upd({marriageMonth:v})} opts={[{v:"",l:"— Month —"},...MONTHS]} />
+                <TS l="Day" v={person.marriageDay} s={v => upd({marriageDay:v})} opts={[{v:"",l:"— Day —"},...DAYS]} />
+                <TS l="Year" v={person.marriageYear} s={v => upd({marriageYear:v})} opts={[{v:"",l:"— Year —"},...YEARS]} />
+              </div>
             </>}
 
             <GD label="Intentions" />
