@@ -446,17 +446,18 @@ function buildPrompt(p, tier) {
     ...(peopleData.length ? { compatibility: peopleData.map(pd => ({
       name: pd.name,
       relationship: pd.relationship,
-      lifePath: pd.lifePath,
-      reading: "3 sentences on the Life Path " + formatNum(n.lifePath) + " and Life Path " + pd.lifePath + " dynamic as " + pd.relationship + " — natural resonance, friction points, and what this connection is here to teach both souls"
+      lifePath: String(pd.lifePath),
+      harmony: "1 sentence on the natural resonance between Life Path " + formatNum(n.lifePath) + " and Life Path " + pd.lifePath,
+      tension: "1 sentence on the friction or growth edge in this " + pd.relationship + " dynamic",
+      soulLesson: "1 sentence on what this connection is here to teach " + name
     }))} : {}),
 
     holisticSynthesis: {
-      corePattern: "4 sentences — the single thread running through all the numbers. What is the universe asking of " + name + "?",
-      greatestGift: "2 sentences on the rarest gift this specific combination produces",
+      corePattern: "3 sentences — the single thread running through all the numbers for " + name,
       soulSignature: "1 unforgettable sentence that defines " + name + " at soul level"
     },
 
-    soulMessage: "5 sentences written directly to " + name + ". Weave Life Path " + formatNum(n.lifePath) + ", the timing, and the shadow invitation. End with one sentence of irreducible truth."
+    soulMessage: "4 sentences written directly to " + name + ". Weave Life Path " + formatNum(n.lifePath) + " and the shadow invitation. End with one irreducible truth."
   }));
 
   return lines.join("\n");
@@ -509,40 +510,77 @@ async function generateReading(p, tier, onProgress) {
   let clean = accumulated.trim();
   // Strip markdown fences
   clean = clean.replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/\s*```$/i, "").trim();
-  // Extract JSON object
+  // Extract JSON object bounds
   const first = clean.indexOf("{");
+  if (first !== -1) clean = clean.slice(first);
   const last = clean.lastIndexOf("}");
-  if (first !== -1 && last !== -1 && last > first) {
-    clean = clean.slice(first, last + 1);
-  }
-  // Attempt 1: direct parse
-  try { return JSON.parse(clean); } catch {}
-  // Attempt 2: remove trailing commas
-  try { return JSON.parse(clean.replace(/,\s*([}\]])/g, "$1")); } catch {}
-  // Attempt 3: aggressive multi-pass repair
-  try {
-    let f = clean;
+  if (last !== -1) clean = clean.slice(0, last + 1);
+
+  // Helper: repair and attempt parse
+  const tryParse = str => {
     // Remove trailing commas
-    f = f.replace(/,\s*([}\]])/g, "$1");
-    // Fix unescaped newlines inside strings: replace literal newlines within quotes
+    let f = str.replace(/,\s*([}\]])/g, "$1");
+    // Fix unescaped newlines/tabs inside strings
     f = f.replace(/"((?:[^"\\]|\\.)*)"/g, (m, inner) => {
-      const fixed = inner.replace(/\n/g, "\\n").replace(/\r/g, "\\r").replace(/\t/g, "\\t");
-      return '"' + fixed + '"';
+      return '"' + inner.replace(/\n/g, " ").replace(/\r/g, "").replace(/\t/g, " ") + '"';
     });
     return JSON.parse(f);
+  };
+
+  // Attempt 1: direct parse
+  try { return tryParse(clean); } catch {}
+
+  // Attempt 2: auto-close truncated JSON
+  // Walk the string tracking open structures, then close them all
+  try {
+    const closeJSON = str => {
+      const stack = [];
+      let inStr = false, escape = false;
+      let lastGoodIdx = 0;
+      for (let i = 0; i < str.length; i++) {
+        const c = str[i];
+        if (escape) { escape = false; continue; }
+        if (c === "\\" && inStr) { escape = true; continue; }
+        if (c === '"') { inStr = !inStr; if (!inStr) lastGoodIdx = i; continue; }
+        if (inStr) continue;
+        if (c === "{" || c === "[") { stack.push(c === "{" ? "}" : "]"); }
+        else if (c === "}" || c === "]") {
+          if (stack.length && stack[stack.length-1] === c) { stack.pop(); lastGoodIdx = i; }
+        } else if (c !== " " && c !== "\n" && c !== "\t" && c !== ",") {
+          lastGoodIdx = i;
+        }
+      }
+      // If we're inside a string, cut back to last completed value
+      let truncated = inStr ? str.slice(0, lastGoodIdx + 1) : str;
+      // Remove trailing partial key or comma
+      truncated = truncated.replace(/,\s*"[^"]*$/, "").replace(/,\s*$/, "");
+      // Close all open structures
+      return truncated + stack.reverse().join("");
+    };
+    return tryParse(closeJSON(clean));
   } catch {}
-  // Attempt 4: extract valid fields we can and build partial object
+
+  // Attempt 3: regex-extract every completed top-level field
   try {
     const partial = {};
-    const snapMatch = clean.match(/"cosmicSnapshot"\s*:\s*"((?:[^"\\]|\\.)*)"/);
-    if (snapMatch) partial.cosmicSnapshot = snapMatch[1];
-    const msgMatch = clean.match(/"soulMessage"\s*:\s*"((?:[^"\\]|\\.)*)"/);
-    if (msgMatch) partial.soulMessage = msgMatch[1];
-    if (Object.keys(partial).length > 0) {
-      partial._partial = true;
-      return partial;
+    const fieldRe = /"(\w+)"\s*:\s*(\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}|"(?:[^"\\]|\\.)*"|\[(?:[^\[\]]|\[(?:[^\[\]])*\])*\]|-?\d+(?:\.\d+)?|true|false|null)/g;
+    let m;
+    while ((m = fieldRe.exec(clean)) !== null) {
+      try { partial[m[1]] = JSON.parse(m[2]); } catch { partial[m[1]] = m[2].replace(/^"|"$/g, ""); }
     }
+    if (Object.keys(partial).length > 2) return partial;
   } catch {}
+
+  // Attempt 4: minimum rescue
+  try {
+    const partial = {};
+    const snap = clean.match(/"cosmicSnapshot"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+    if (snap) partial.cosmicSnapshot = snap[1];
+    const msg = clean.match(/"soulMessage"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+    if (msg) partial.soulMessage = msg[1];
+    if (Object.keys(partial).length > 0) { partial._partial = true; return partial; }
+  } catch {}
+
   throw new Error("Reading complete but JSON failed. Please try again.");
 }
 
@@ -566,7 +604,7 @@ function readingToText(r, name) {
   if (r.sunSign) lines.push("SUN SIGN — " + (r.sunSign.sign||"") + "\n" + (r.sunSign.reading||"") + "\n");
   if (r.compatibility && r.compatibility.length) {
     lines.push("COMPATIBILITY\n");
-    r.compatibility.forEach(c => lines.push(c.name + " (Life Path " + c.lifePath + "):\n" + c.reading + "\n"));
+    r.compatibility.forEach(c => lines.push(c.name + " (" + (c.relationship||"") + " · Life Path " + c.lifePath + "):\n" + [c.harmony, c.tension, c.soulLesson, c.reading].filter(Boolean).join("\n") + "\n"));
   }
   if (r.shadowWork) {
     lines.push("SHADOW WORK\n" + (r.shadowWork.coreWound || "") + "\n" + (r.shadowWork.theGold || "") + "\n");
@@ -839,7 +877,15 @@ function ReadingView({ reading: r, name, onEmail, emailSt }) {
       <InfoBlock label={r.sunSign.sign + " Sun"} text={r.sunSign.reading} color="#7EC4D4" />
     </Sec>}
     {r.compatibility && r.compatibility.length > 0 && <Sec icon="✦" title="Compatibility — Numerology Relationship Reading" color="#9B7ED4">
-      {r.compatibility.map((c, i) => <Card key={i} title={(c.relationship ? c.relationship + " — " : "") + c.name + " · Life Path " + c.lifePath} text={c.reading} color="#9B7ED4" />)}
+      {r.compatibility.map((c, i) => (
+        <div key={i} style={{background:"rgba(155,126,212,.04)",border:"1px solid rgba(155,126,212,.18)",borderRadius:7,padding:"14px 16px",marginBottom:10}}>
+          <div style={{fontFamily:"'Cinzel',serif",fontSize:10,letterSpacing:".14em",color:"#9B7ED4",textTransform:"uppercase",marginBottom:8}}>{c.relationship ? c.relationship + " — " : ""}{c.name} · Life Path {c.lifePath}</div>
+          {c.harmony && <div style={{marginBottom:6}}><span style={{fontFamily:"'Cinzel',serif",fontSize:9,color:"rgba(200,169,110,.7)",textTransform:"uppercase",letterSpacing:".1em"}}>Harmony · </span><span style={{fontSize:13,color:"rgba(255,255,255,.72)",lineHeight:1.8}}>{c.harmony}</span></div>}
+          {c.tension && <div style={{marginBottom:6}}><span style={{fontFamily:"'Cinzel',serif",fontSize:9,color:"rgba(212,126,155,.7)",textTransform:"uppercase",letterSpacing:".1em"}}>Growth Edge · </span><span style={{fontSize:13,color:"rgba(255,255,255,.72)",lineHeight:1.8}}>{c.tension}</span></div>}
+          {c.soulLesson && <div><span style={{fontFamily:"'Cinzel',serif",fontSize:9,color:"rgba(126,196,212,.7)",textTransform:"uppercase",letterSpacing:".1em"}}>Soul Lesson · </span><span style={{fontSize:13,color:"rgba(255,255,255,.72)",lineHeight:1.8}}>{c.soulLesson}</span></div>}
+          {c.reading && <p style={{fontSize:13,color:"rgba(255,255,255,.72)",lineHeight:1.88,marginTop:8}}>{c.reading}</p>}
+        </div>
+      ))}
     </Sec>}
 
     {r.chineseZodiac && <Sec icon="🐉" title={"Chinese Zodiac — Three Animal System"} color="#D47E9B">
