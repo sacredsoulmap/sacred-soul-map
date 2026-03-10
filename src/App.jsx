@@ -272,28 +272,32 @@ function buildPrompt(p, tier) {
 
   if (tier === "soul-spark") {
     lines.push("You are a numerologist trained in David A. Phillips' Complete Book of Numerology.");
-    lines.push("OUTPUT: Return ONLY a raw JSON object. No markdown, no backticks, no preamble. Start with { end with }. No newlines inside string values. Use single quotes inside strings, never double quotes.");
+    lines.push("OUTPUT: Return ONLY a raw JSON object. No markdown, no backticks, no preamble. Start with { end with }. No newlines inside string values. Use single quotes inside strings, never double quotes inside strings.");
     lines.push("");
-    lines.push("Person: " + name + " | DOB: " + p.bMonth+"/"+p.bDay+"/"+p.bYear);
-    lines.push("Life Path: " + formatNum(n.lifePath) + " | Expression: " + formatNum(n.expression) + " | Soul Urge: " + formatNum(n.soulUrge) + " | Personal Year: " + n.personalYear);
-    lines.push("Chinese Zodiac: " + n.chinese.element + " " + n.chinese.animal + " | Inner Animal: " + n.chinese.innerAnimal + " | Secret Animal: " + n.chinese.secretAnimal);
+    lines.push("PERSON: " + name + " | DOB: " + p.bMonth+"/"+p.bDay+"/"+p.bYear);
+    lines.push("NUMBERS — do not recalculate:");
+    lines.push("Life Path: " + formatNum(n.lifePath) + " | Expression: " + formatNum(n.expression) + " | Soul Urge: " + formatNum(n.soulUrge));
+    lines.push("Personality: " + formatNum(n.personality) + " | Birthday: " + formatNum(n.birthday) + " | Personal Year: " + n.personalYear);
+    lines.push("Chinese Zodiac: " + n.chinese.element + " " + n.chinese.animal + " (Year) | " + n.chinese.innerAnimal + " (Inner) | " + n.chinese.secretAnimal + " (Secret)");
     lines.push("");
-    lines.push("Return this JSON:");
+    lines.push("RETURN THIS EXACT JSON — all fields required:");
     lines.push(JSON.stringify({
-      cosmicSnapshot: "2 vivid sentences — Life Path " + formatNum(n.lifePath) + " soul purpose woven with Personal Year " + n.personalYear + " energy for " + name,
+      cosmicSnapshot: "2 vivid sentences — weave Life Path " + formatNum(n.lifePath) + " and Personal Year " + n.personalYear + " into the soul theme of this chapter for " + name,
       numerology: {
-        lifePath: { number: formatNum(n.lifePath), title: "3-word evocative title", reading: "3 sentences on soul purpose, Life Path " + formatNum(n.lifePath) + " gifts, and master number meaning if applicable", shadow: "1 sentence on the core ego trap of this Life Path" },
-        expression: { number: formatNum(n.expression), title: "3-word title", reading: "2 sentences on natural talents and destiny role" },
-        soulUrge: { number: formatNum(n.soulUrge), title: "3-word title", reading: "2 sentences on deepest heart desire" },
-        timing: { personalYear: n.personalYear, reading: "2 sentences — what Personal Year " + n.personalYear + " is specifically calling " + name + " to do, release, or build right now" }
+        lifePath:   { number: formatNum(n.lifePath),   title: "3-word soul-level title", reading: "3 rich sentences — soul mission, how Life Path " + formatNum(n.lifePath) + " operates in the world, master number depth if applicable", shadow: "1 sentence on the shadow/ego trap" },
+        expression: { number: formatNum(n.expression), title: "3-word destiny title",    reading: "2 sentences — natural talents encoded in the birth name, the outer destiny role" },
+        soulUrge:   { number: formatNum(n.soulUrge),   title: "3-word heart title",      reading: "2 sentences — the deepest inner craving, what this soul must feel to thrive" },
+        personality:{ number: formatNum(n.personality),title: "3-word mask title",       reading: "2 sentences — how the world perceives " + name + " before they speak, and how the Personality mask differs from the Soul Urge beneath it" },
+        birthday:   { number: formatNum(n.birthday),   title: "2-word gift title",       reading: "2 sentences — the innate special talent embedded in the day of birth per Phillips" },
+        timing:     { personalYear: n.personalYear,    reading: "2 sentences — what Personal Year " + n.personalYear + " is specifically calling " + name + " to do, build, or release right now in 2026" }
       },
       chineseZodiac: {
-        yearAnimal: n.chinese.element + " " + n.chinese.animal,
-        innerAnimal: n.chinese.innerAnimal,
+        yearAnimal:   n.chinese.element + " " + n.chinese.animal,
+        innerAnimal:  n.chinese.innerAnimal,
         secretAnimal: n.chinese.secretAnimal,
-        reading: "2 sentences on how the " + n.chinese.element + " " + n.chinese.animal + " energy shapes " + name + "'s approach to life and purpose"
+        reading: "3 sentences — the three-animal portrait: how the Year Animal shapes the public self, Inner Animal the private nature, and Secret Animal the subconscious drive for " + name
       },
-      soulMessage: "3 sentences written directly to " + name + " — weave Life Path " + formatNum(n.lifePath) + " and Personal Year " + n.personalYear + ". End with one irreducible truth."
+      soulMessage: "4 sentences written directly to " + name + ". Weave Life Path " + formatNum(n.lifePath) + ", Personal Year " + n.personalYear + ", and the Chinese Zodiac animal energy. End with one irreducible truth they can carry forever."
     }));
     return lines.join("\n");
   }
@@ -664,20 +668,43 @@ async function sendEmail(toEmail, toName, tierName, reading) {
 // ─── TIERS ────────────────────────────────────────────────
 const TIERS = [
   { id: "soul-spark", name: "Soul Spark", price: "$47", color: "#C8A96E",
-    desc: "6 core numbers · Chinese zodiac · Soul message",
-    includes: ["Life Path · Expression · Soul Urge", "Personal Year timing", "Chinese Zodiac", "Soul Message"],
+    desc: "Your 6 core numbers decoded · Chinese Zodiac · Personal Year · Soul Message",
+    includes: [
+      "Life Path · Expression · Soul Urge · Personality · Birthday Number",
+      "Personal Year timing — what 2026 is calling you toward",
+      "Chinese Zodiac 3-animal portrait (Year · Inner · Secret)",
+      "Soul Message written directly to you"
+    ],
     maxPeople: 0 },
   { id: "cosmic-self", name: "Cosmic Self", price: "$97", color: "#9B7ED4", popular: true,
-    desc: "Complete Phillips system · Shadow work · Holistic synthesis",
-    includes: ["Everything in Soul Spark", "All Phillips depth numbers", "Arrows of Pythagoras", "Chinese Zodiac 3-layer portrait", "Shadow Work + 5 prompts", "Holistic Synthesis + Soul Message"],
+    desc: "The complete David A. Phillips system — deeper than any automated report",
+    includes: [
+      "All 6 core numbers + Maturity · Bridge · Subconscious Self · First Vowel",
+      "Arrows of Pythagoras — your instinctive strengths & soul lessons (rare)",
+      "Planes of Expression · Intensity Table · Missing Numbers · Karmic Debts",
+      "All 4 Pinnacles & Challenges · Exact Personal Year + Month timing",
+      "Chinese Zodiac 3-animal deep dive · Sun Sign cross-reference",
+      "Shadow Work — 5 journal prompts derived entirely from your numbers",
+      "Holistic Synthesis · Soul Signature · Soul Message"
+    ],
     maxPeople: 0 },
   { id: "soul-connections", name: "Soul Connections", price: "$197", color: "#D47E9B",
-    desc: "Full reading for you + 1 other person + compatibility",
-    includes: ["Full Cosmic Self for both people", "Numerology compatibility reading", "Relationship dynamic analysis", "Soul contract between the two"],
+    desc: "Full Cosmic Self for you + 1 person · Deep compatibility reading",
+    includes: [
+      "Complete Cosmic Self reading for both people",
+      "Numerology compatibility — Life Path dynamic, friction points, soul lessons",
+      "Marriage / Union date Life Path — the soul mission of the relationship",
+      "What this connection is here to teach both souls"
+    ],
     maxPeople: 1 },
   { id: "full-realm", name: "Full Realm", price: "$397", color: "#7EC4D4",
-    desc: "Up to 5 people · Full readings + group dynamics",
-    includes: ["Full Cosmic Self for all 5 people", "Individual numerology for each person", "Compatibility reading for every pair", "Group energy + collective shadow"],
+    desc: "Up to 5 people · Full readings for each · Group compatibility",
+    includes: [
+      "Complete Cosmic Self reading for all 5 people",
+      "Individual numerology + compatibility reading for every person",
+      "Marriage / Union date analysis",
+      "Group energy portrait — collective strengths, missing energies, shadow"
+    ],
     maxPeople: 4 },
 ];
 
@@ -963,15 +990,19 @@ function ReadingView({ reading: r, name, onEmail, emailSt }) {
       <InfoBlock label="Origin" text={r.shadowWork.origin} color="#9B7ED4" />
       <InfoBlock label="The Gold — What Integrating Unlocks" text={r.shadowWork.theGold} color="#C8A96E" />
       <InfoBlock label="Soul Invitation" text={r.shadowWork.soulInvitation} color="#D47E9B" />
-      {r.shadowWork.prompts && r.shadowWork.prompts.length > 0 && <div style={{ background:"rgba(155,126,212,.05)", border:"1px solid rgba(155,126,212,.18)", borderRadius:7, padding:"14px 16px" }}>
-        <div style={{ fontFamily:"'Cinzel',serif", fontSize:10, letterSpacing:".14em", textTransform:"uppercase", color:"#9B7ED4", marginBottom:11 }}>Journal Prompts</div>
-        {r.shadowWork.prompts.map((prompt, i) => (
-          <div key={i} style={{ display:"flex", gap:9, marginBottom:9 }}>
-            <span style={{ color:"#9B7ED4", fontSize:11, marginTop:2, flexShrink:0 }}>{i+1}.</span>
-            <p style={{ fontSize:13, color:"rgba(255,255,255,.62)", lineHeight:1.8, fontStyle:"italic" }}>{prompt}</p>
-          </div>
-        ))}
-      </div>}
+      {r.shadowWork.prompts && (() => {
+        const raw = r.shadowWork.prompts;
+        const arr = Array.isArray(raw) ? raw : (typeof raw === "string" ? raw.split("|").map(s => s.trim()).filter(Boolean) : []);
+        return arr.length > 0 ? <div style={{ background:"rgba(155,126,212,.05)", border:"1px solid rgba(155,126,212,.18)", borderRadius:7, padding:"14px 16px" }}>
+          <div style={{ fontFamily:"'Cinzel',serif", fontSize:10, letterSpacing:".14em", textTransform:"uppercase", color:"#9B7ED4", marginBottom:11 }}>Journal Prompts</div>
+          {arr.map((prompt, i) => (
+            <div key={i} style={{ display:"flex", gap:9, marginBottom:9 }}>
+              <span style={{ color:"#9B7ED4", fontSize:11, marginTop:2, flexShrink:0 }}>{i+1}.</span>
+              <p style={{ fontSize:13, color:"rgba(255,255,255,.62)", lineHeight:1.8, fontStyle:"italic" }}>{prompt}</p>
+            </div>
+          ))}
+        </div> : null;
+      })()}
     </Sec>}
 
     {r.holisticSynthesis && <Sec icon="🌐" title="Holistic Synthesis — All Systems United" color="#C8A96E">
