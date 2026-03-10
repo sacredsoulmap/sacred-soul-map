@@ -276,15 +276,24 @@ function buildPrompt(p, tier) {
     lines.push("");
     lines.push("Person: " + name + " | DOB: " + p.bMonth+"/"+p.bDay+"/"+p.bYear);
     lines.push("Life Path: " + formatNum(n.lifePath) + " | Expression: " + formatNum(n.expression) + " | Soul Urge: " + formatNum(n.soulUrge) + " | Personal Year: " + n.personalYear);
+    lines.push("Chinese Zodiac: " + n.chinese.element + " " + n.chinese.animal + " | Inner Animal: " + n.chinese.innerAnimal + " | Secret Animal: " + n.chinese.secretAnimal);
     lines.push("");
     lines.push("Return this JSON:");
     lines.push(JSON.stringify({
-      cosmicSnapshot: "2 vivid sentences capturing " + name + "'s Life Path " + formatNum(n.lifePath) + " energy and current Personal Year " + n.personalYear + " theme",
-      lifePath: { number: formatNum(n.lifePath), title: "3-word title", reading: "3 sentences on soul purpose and Phillips master number meaning if applicable", shadow: "1 sentence on the core ego trap" },
-      expression: { number: formatNum(n.expression), title: "3-word title", reading: "2 sentences on natural talents and destiny role" },
-      soulUrge: { number: formatNum(n.soulUrge), title: "3-word title", reading: "2 sentences on deepest heart desire" },
-      timing: "2 sentences on what Personal Year " + n.personalYear + " is calling for right now",
-      soulMessage: "3 sentences written directly to " + name + " — end with one irreducible truth"
+      cosmicSnapshot: "2 vivid sentences — Life Path " + formatNum(n.lifePath) + " soul purpose woven with Personal Year " + n.personalYear + " energy for " + name,
+      numerology: {
+        lifePath: { number: formatNum(n.lifePath), title: "3-word evocative title", reading: "3 sentences on soul purpose, Life Path " + formatNum(n.lifePath) + " gifts, and master number meaning if applicable", shadow: "1 sentence on the core ego trap of this Life Path" },
+        expression: { number: formatNum(n.expression), title: "3-word title", reading: "2 sentences on natural talents and destiny role" },
+        soulUrge: { number: formatNum(n.soulUrge), title: "3-word title", reading: "2 sentences on deepest heart desire" },
+        timing: { personalYear: n.personalYear, reading: "2 sentences — what Personal Year " + n.personalYear + " is specifically calling " + name + " to do, release, or build right now" }
+      },
+      chineseZodiac: {
+        yearAnimal: n.chinese.element + " " + n.chinese.animal,
+        innerAnimal: n.chinese.innerAnimal,
+        secretAnimal: n.chinese.secretAnimal,
+        reading: "2 sentences on how the " + n.chinese.element + " " + n.chinese.animal + " energy shapes " + name + "'s approach to life and purpose"
+      },
+      soulMessage: "3 sentences written directly to " + name + " — weave Life Path " + formatNum(n.lifePath) + " and Personal Year " + n.personalYear + ". End with one irreducible truth."
     }));
     return lines.join("\n");
   }
@@ -877,10 +886,10 @@ function ReadingView({ reading: r, name, onEmail, emailSt }) {
     {(N.challenges || N.pinnacles) && <Sec icon="⏳" title="Life Arc — Pinnacles & Challenges" color="#9B7ED4">
       {N.challenges && <InfoBlock label={"Challenge Arc · Active: " + N.challenges.active} text={N.challenges.reading} color="#D47E9B" />}
       {N.pinnacles && <InfoBlock label={"Pinnacle Arc · Active: " + N.pinnacles.active} text={N.pinnacles.reading} color="#9B7ED4" />}
-      {N.timing && <div style={{ marginTop:10, padding:"12px 14px", background:"rgba(126,196,212,.05)", border:"1px solid rgba(126,196,212,.18)", borderRadius:6 }}>
-        <div style={{ fontFamily:"'Cinzel',serif", fontSize:9, letterSpacing:".14em", textTransform:"uppercase", color:"#7EC4D4", marginBottom:6 }}>✦ Your Exact Timing Right Now</div>
-        <p style={{ fontSize:13, color:"rgba(255,255,255,.72)", lineHeight:1.88 }}>{N.timing.reading}</p>
-      </div>}
+    </Sec>}
+
+    {N.timing && <Sec icon="🗓" title={"Personal Year " + (N.timing.personalYear || "") + " — Your Timing Right Now"} color="#7EC4D4">
+      <p style={{ fontSize:13, color:"rgba(255,255,255,.72)", lineHeight:1.88, padding:"4px 0" }}>{N.timing.reading}</p>
     </Sec>}
 
     {(N.missing || N.karmicReading) && <Sec icon="🔓" title="Missing Numbers & Karmic Debts" color="#D47E9B">
