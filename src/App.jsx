@@ -279,8 +279,6 @@ function buildPrompt(p, tier) {
   const lines = [];
 
   if (tier === "soul-spark") {
-    // APPROACH: AI writes labeled sections in plain text. We parse by section label.
-    // This eliminates all JSON confusion — AI just writes prose, we extract by header.
     const lp = formatNum(n.lifePath), ex = formatNum(n.expression), su = formatNum(n.soulUrge);
     const pe = formatNum(n.personality), bd = formatNum(n.birthday), mat = formatNum(n.maturity);
     const py = n.personalYear;
@@ -288,53 +286,58 @@ function buildPrompt(p, tier) {
     const czIn = n.chinese.innerAnimal, czSec = n.chinese.secretAnimal;
     const sun = n.sunSign || "";
 
-    lines.push("You are a master numerologist, astrologer, and Chinese metaphysics scholar trained in David A. Phillips' Complete Book of Numerology.");
-    lines.push("Write a deeply personal reading for " + name + ". Every sentence must be specific to their actual numbers — not generic. Use Phillips' actual system.");
-    lines.push("OUTPUT FORMAT: Write your response as labeled sections. Start EACH section with the EXACT label shown below on its own line, followed immediately by your content.");
-    lines.push("Use this EXACT JSON structure in your response — replace every PLACEHOLDER with real reading content:");
+    lines.push("You are a master numerologist trained in David A. Phillips Complete Book of Numerology, an astrologer, and Chinese metaphysics scholar. Write a deeply personal, specific reading for " + name + ".");
+    lines.push("CRITICAL OUTPUT RULE: Return ONLY a flat JSON object. Every key is at the TOP LEVEL — no nested objects. Start with { end with }. No markdown, no backticks. Single quotes only inside strings.");
     lines.push("");
-    lines.push("PERSON: " + name + " | DOB: " + p.bMonth+"/"+p.bDay+"/"+p.bYear);
+    lines.push("PERSON: " + name + " | Born: " + p.bMonth + "/" + p.bDay + "/" + p.bYear);
     lines.push("Birth name: " + n.fullName);
-    if (n.hasCurrent) lines.push("Current name: " + n.currentFull + " — factor this name-change energy into the reading");
+    if (n.hasCurrent) lines.push("Current name: " + n.currentFull);
     lines.push("");
-    lines.push("BLUEPRINT:");
-    lines.push("Life Path " + lp + (n.lifePath===33?" = 33/6 MASTER TEACHER [rarest master number — planetary-scale healer/teacher. Must transform personal wounds into wisdom. Cannot give what hasn't been healed in themselves. Carries dual burden of 33 creative genius AND 6 unconditional love.]":n.lifePath===11?" = 11/2 MASTER INTUITIVE":n.lifePath===22?" = 22/4 MASTER BUILDER":""));
-    lines.push("Expression " + ex + " = natural talents encoded in birth name, outer destiny role");
-    lines.push("Soul Urge " + su + " = private inner hunger, what they need to feel fulfilled");
-    lines.push("Personality " + pe + (n.personality===44?" = 44/8 DOUBLE MASTER [extreme rarity — projects immense authority, material mastery, disciplined power. World sees a fortress.]":n.personality===33?" = 33/6 MASTER":n.personality===22?" = 22/4 MASTER":n.personality===11?" = 11/2 MASTER":"") + " = outer mask, first impression");
-    lines.push("Birthday " + bd + " = specific pre-loaded innate gift (Phillips)");
-    lines.push("Maturity " + mat + " = soul destination, dominant after age 35-40");
+    lines.push("NUMEROLOGY BLUEPRINT (Phillips method):");
+    lines.push("Life Path " + lp + (n.lifePath === 33 ? " [33/6 MASTER TEACHER — rarest master number. Must transform personal wounds into wisdom for humanity. Carries both 33 creative genius and 6 love/responsibility. Cannot give what they havent healed in themselves.]" : n.lifePath === 11 ? " [11/2 MASTER INTUITIVE]" : n.lifePath === 22 ? " [22/4 MASTER BUILDER]" : ""));
+    lines.push("Expression " + ex + " — talents encoded in birth name, outer destiny role");
+    lines.push("Soul Urge " + su + " — the private inner hunger that drives all choices");
+    lines.push("Personality " + pe + (n.personality === 44 ? " [44/8 DOUBLE MASTER — extremely rare, projects immense authority and power]" : "") + " — outer mask, first impression");
+    lines.push("Birthday " + bd + " — one specific innate gift (per Phillips)");
+    lines.push("Maturity " + mat + " — soul destination after age 35-40");
     lines.push("Personal Year " + py + " in 2026");
-    lines.push("Chinese Zodiac: " + czYr + " (Year/Public) | " + czIn + " (Inner/Private) | " + czSec + " (Secret/Subconscious)");
+    lines.push("Chinese Zodiac: " + czYr + " (Year/Public) | " + czIn + " (Inner) | " + czSec + " (Secret)");
     if (sun) lines.push("Sun Sign: " + sun);
     lines.push("");
-    lines.push("Write the following JSON. Replace every string value with real content. DO NOT leave any string empty. All values must be filled:");
-    lines.push("");
-
-    // Now provide a JSON with descriptive placeholder strings that tell AI what to write
-    const schema = {
-      cosmicSnapshot: "WRITE: 3 vivid sentences — the soul mission of Life Path " + lp + ", what Personal Year " + py + " is asking right now, what this chapter means for " + name,
-      numerology: {
-        lifePath:    { title: "WRITE: 3-word soul title for Life Path " + lp, reading: "WRITE: 4 deep sentences — WHY this soul chose Life Path " + lp + ", what it demands, what mastery looks like, the higher calling when fully lived" + (n.lifePath===33?" Include the dual nature of 33/6 — the master teacher who must heal themselves first":""), shadow: "WRITE: 2 sentences — the specific ego trap and lower expression of Life Path " + lp },
-        expression:  { title: "WRITE: 3-word destiny title for Expression " + ex, reading: "WRITE: 3 sentences — the specific talents encoded in " + name + "'s birth name, the type of work Expression " + ex + " is built for, how it shows up as natural ability", shadow: "WRITE: 1 sentence — what happens when Expression " + ex + " is blocked or unowned" },
-        soulUrge:    { title: "WRITE: 3-word heart title for Soul Urge " + su, reading: "WRITE: 3 sentences — the private hunger of Soul Urge " + su + ": what " + name + " must FEEL to thrive, what they secretly crave, how it drives choices even unnamed", shadow: "WRITE: 1 sentence — what happens when Soul Urge " + su + " is chronically unmet" },
-        personality: { title: "WRITE: 3-word mask title for Personality " + pe, reading: "WRITE: 3 sentences — the first impression Personality " + pe + " creates before a word is spoken, how the world reads and approaches " + name + ", the gap between this mask and the Soul Urge " + su + " beneath", shadow: "WRITE: 1 sentence — the misreading Personality " + pe + " tends to attract" },
-        birthday:    { title: "WRITE: 2-word gift title for Birthday " + bd, reading: "WRITE: 3 sentences — the ONE specific innate gift Phillips assigns Birthday " + bd + ", how it operates naturally in " + name + "'s life, how it serves the Life Path " + lp + " mission", shadow: "WRITE: 1 sentence — the challenge bundled with Birthday " + bd },
-        maturity:    { title: "WRITE: 3-word becoming title for Maturity " + mat, reading: "WRITE: 3 sentences — what " + name + " is growing INTO with Maturity " + mat + ", how life is reorganizing to deliver this, what feels increasingly right after 35-40", shadow: "WRITE: 1 sentence — the resistance as Maturity " + mat + " asks for more space" },
-        timing:      { reading: "WRITE: 3 sentences — what Personal Year " + py + " means in 2026 for " + name + ": the theme, what to build or release, the ONE thing this year demands" },
-        synthesis:   { reading: "WRITE: 5 sentences — how all 6 numbers work as ONE system for " + name + ": (1) the primary harmony between numbers, (2) the primary tension, (3) the dominant pattern, (4) the core gift, (5) the central soul challenge to resolve this lifetime. Numbers: " + lp + " + " + ex + " + " + su + " + " + pe + " + " + bd + " + " + mat }
-      },
-      chineseZodiac: {
-        reading: "WRITE: 4 sentences — how the " + czYr + " shapes " + name + "'s public face, how the Inner " + czIn + " reveals the true private nature, how the Secret " + czSec + " operates subconsciously, how all three explain the complexity of who " + name + " actually is",
-        elementalNature: "WRITE: 3 sentences — the element " + n.chinese.element + ": what it means energetically for " + name + ", how it shapes personality and emotional life, how it interacts with the numerology blueprint",
-        lifeThemes: "WRITE: 3 sentences — the major life themes, soul contracts, and karmic patterns the " + czYr + " carries per Chinese metaphysics",
-        animalWisdom: "WRITE: 3 sentences — what the Inner " + czIn + " reveals about " + name + "'s true private nature (2 sentences) and what the Secret " + czSec + " drives at the subconscious level (1 sentence)",
-        numerologyCrossReference: "WRITE: 3 sentences — how the animal energy mirrors or tensions Life Path " + lp + ", Expression " + ex + ", and Soul Urge " + su + " — show they are all describing the same soul from different angles"
-      },
-      sunSign: sun ? { sign: sun, reading: "WRITE: 3 sentences — " + sun + " Sun core identity and life force for " + name + ", how " + sun + " amplifies or tensions the Life Path " + lp + " mission", shadow: "WRITE: 2 sentences — the shadow of " + sun + ": lower expression and what it looks like when operating from fear" } : null,
-      soulMessage: "WRITE: 6 sentences directly to " + name + ", soul to soul. Weave Life Path " + lp + ", synthesis pattern, Personal Year " + py + ", Chinese Zodiac" + (sun?", and " + sun + " Sun":"") + ". Acknowledge both the gift AND the weight. End with one irreducible truth — not an affirmation but a soul anchor."
-    };
-    lines.push(JSON.stringify(schema, null, 0));
+    lines.push("RETURN THIS EXACT FLAT JSON — fill every value with deep, specific content (no placeholders, no empty strings):");
+    lines.push("{");
+    lines.push('"cosmicSnapshot": "3 vivid sentences — soul mission of Life Path ' + lp + ', what Personal Year ' + py + ' is asking right now, what this chapter means for ' + name + '",');
+    lines.push('"lpTitle": "3-word title capturing the essence of Life Path ' + lp + '",');
+    lines.push('"lpReading": "4 sentences — WHY this soul chose Life Path ' + lp + ', what it demands, what mastery looks like, the higher calling when fully lived' + (n.lifePath===33?' Include the 33/6 dual nature — master teacher who must first heal themselves':'') + '",');
+    lines.push('"lpShadow": "2 sentences — the specific ego trap and lower expression of Life Path ' + lp + ' when unconscious",');
+    lines.push('"exTitle": "3-word title for Expression ' + ex + '",');
+    lines.push('"exReading": "3 sentences — the specific talents in ' + name + 's birth name, the work Expression ' + ex + ' is built for, how it shows up as natural ability",');
+    lines.push('"exShadow": "1 sentence — what happens when Expression ' + ex + ' is blocked or unowned",');
+    lines.push('"suTitle": "3-word title for Soul Urge ' + su + '",');
+    lines.push('"suReading": "3 sentences — what ' + name + ' must FEEL to thrive, what they secretly crave, how Soul Urge ' + su + ' drives choices even when unnamed",');
+    lines.push('"suShadow": "1 sentence — what happens when Soul Urge ' + su + ' is chronically unmet",');
+    lines.push('"peTitle": "3-word title for Personality ' + pe + '",');
+    lines.push('"peReading": "3 sentences — the first impression Personality ' + pe + ' creates, how the world reads ' + name + ', the gap between this mask and the Soul Urge ' + su + ' beneath",');
+    lines.push('"peShadow": "1 sentence — the misreading Personality ' + pe + ' tends to attract",');
+    lines.push('"bdTitle": "2-word title for Birthday ' + bd + '",');
+    lines.push('"bdReading": "3 sentences — the ONE specific innate gift Phillips assigns Birthday ' + bd + ', how it operates naturally, how it serves Life Path ' + lp + '",');
+    lines.push('"bdShadow": "1 sentence — the challenge bundled with Birthday ' + bd + '",');
+    lines.push('"matTitle": "3-word title for Maturity ' + mat + '",');
+    lines.push('"matReading": "3 sentences — what ' + name + ' is growing INTO with Maturity ' + mat + ', how life reorganizes to deliver this, what feels increasingly right after 35-40",');
+    lines.push('"matShadow": "1 sentence — the resistance as Maturity ' + mat + ' asks for more space",');
+    lines.push('"pyReading": "3 sentences — what Personal Year ' + py + ' means in 2026: the exact theme, what to build or release, the ONE thing this year demands of ' + name + '",');
+    lines.push('"synthesis": "5 sentences — how all 6 numbers work as ONE system: (1) the primary harmony, (2) the primary tension, (3) the dominant pattern, (4) the core gift, (5) the central soul challenge to resolve this lifetime. Numbers: ' + lp + ' + ' + ex + ' + ' + su + ' + ' + pe + ' + ' + bd + ' + ' + mat + '",');
+    lines.push('"czPortrait": "4 sentences — how the ' + czYr + ' shapes ' + name + 's public face, how Inner ' + czIn + ' reveals the true private nature most never see, how Secret ' + czSec + ' drives subconscious behavior, how all three explain ' + name + 's apparent contradictions",');
+    lines.push('"czElement": "3 sentences — the ' + n.chinese.element + ' element: what it means energetically for ' + name + ', how it shapes emotional life and health, how it interacts with the numerology",');
+    lines.push('"czThemes": "3 sentences — the major life themes, soul contracts, and karmic patterns the ' + czYr + ' carries per Chinese metaphysics",');
+    lines.push('"czAnimalWisdom": "3 sentences — what Inner ' + czIn + ' reveals about ' + name + 's true private nature (2 sentences), what Secret ' + czSec + ' drives at the subconscious level (1 sentence)",');
+    lines.push('"czCrossRef": "3 sentences — how the animal energy mirrors or tensions Life Path ' + lp + ', Expression ' + ex + ', and Soul Urge ' + su + ' — show they describe the same soul from different angles"' + (sun ? ',' : ''));
+    if (sun) {
+      lines.push('"sunReading": "3 sentences — ' + sun + ' Sun core identity for ' + name + ', how this fire sign amplifies the Life Path ' + lp + ' mission, how it shows up as natural leadership and expression",');
+      lines.push('"sunShadow": "2 sentences — the shadow of ' + sun + ': the lower expression when operating from fear rather than power"');
+    }
+    lines.push('"soulMessage": "6 sentences directly to ' + name + ' soul to soul — weave Life Path ' + lp + ', the synthesis pattern, Personal Year ' + py + ', Chinese Zodiac' + (sun?', and ' + sun + ' Sun':'') + '. Acknowledge both the gift AND the weight. End with one irreducible truth — a soul anchor not an affirmation."');
+    lines.push("}");
     return lines.join("\n");
   }
 
@@ -877,33 +880,49 @@ function ReadingView({ reading: r, name, onEmail, emailSt, nums, tierId }) {
   const [copied, setCopied] = useState(false);
   if (!r) return null;
 
-  // N = AI prose only. Numbers always come from local calcNums (nums) — never from AI.
+  // N = AI prose. For Soul Spark, AI returns flat keys (lpReading, exReading etc).
+  // For full tiers, AI returns nested under numerology or top-level objects.
   const N = r.numerology || {};
   const CZ = r.chineseZodiac || {};
 
-  // Number values from local calculation (immune to AI errors)
-  const lpNum    = nums ? formatNum(nums.lifePath)    : (N.lifePath?.number    || "");
-  const exNum    = nums ? formatNum(nums.expression)  : (N.expression?.number  || "");
-  const suNum    = nums ? formatNum(nums.soulUrge)    : (N.soulUrge?.number    || "");
-  const peNum    = nums ? formatNum(nums.personality) : (N.personality?.number || "");
-  const bdNum    = nums ? formatNum(nums.birthday)    : (N.birthday?.number    || "");
-  const matNum   = nums ? formatNum(nums.maturity)    : (N.maturity?.number    || "");
-  const pyNum    = nums ? nums.personalYear           : (N.timing?.personalYear || "");
+  // Detect flat (Soul Spark) vs nested (full tiers)
+  const isFlat = !!(r.lpReading || r.lpTitle || r.exReading);
 
-  // Chinese Zodiac values from local calc
-  const czYear   = nums ? (nums.chinese.element + " " + nums.chinese.animal)  : (CZ.yearAnimal   || "");
+  // Number values always from local calcNums — never from AI
+  const lpNum  = nums ? formatNum(nums.lifePath)    : (N.lifePath?.number    || r.lifePath?.number    || "");
+  const exNum  = nums ? formatNum(nums.expression)  : (N.expression?.number  || r.expression?.number  || "");
+  const suNum  = nums ? formatNum(nums.soulUrge)     : (N.soulUrge?.number    || r.soulUrge?.number    || "");
+  const peNum  = nums ? formatNum(nums.personality)  : (N.personality?.number || r.personality?.number || "");
+  const bdNum  = nums ? formatNum(nums.birthday)     : (N.birthday?.number    || r.birthday?.number    || "");
+  const matNum = nums ? formatNum(nums.maturity)     : (N.maturity?.number    || r.maturity?.number    || "");
+  const pyNum  = nums ? nums.personalYear            : (N.timing?.personalYear || r.personalYear?.number || "");
+
+  // Chinese Zodiac from local calc
+  const czYear   = nums ? (nums.chinese.element + " " + nums.chinese.animal) : (CZ.yearAnimal   || "");
   const czInner  = nums ? nums.chinese.innerAnimal  : (CZ.innerAnimal  || "");
   const czSecret = nums ? nums.chinese.secretAnimal : (CZ.secretAnimal || "");
 
-  // Prose from AI
-  const LP = N.lifePath    || {};
-  const EX = N.expression  || {};
-  const SU = N.soulUrge    || {};
-  const PE = N.personality || {};
-  const BD = N.birthday    || {};
-  const MT = N.maturity    || {};
-  const TM = N.timing      || {};
-  const SY = N.synthesis   || {};
+  // Prose — unified access: flat keys first, then nested
+  const LP = isFlat ? { title: r.lpTitle,  reading: r.lpReading,  shadow: r.lpShadow  } : (N.lifePath    || r.lifePath    || {});
+  const EX = isFlat ? { title: r.exTitle,  reading: r.exReading,  shadow: r.exShadow  } : (N.expression  || r.expression  || {});
+  const SU = isFlat ? { title: r.suTitle,  reading: r.suReading,  shadow: r.suShadow  } : (N.soulUrge    || r.soulUrge    || {});
+  const PE = isFlat ? { title: r.peTitle,  reading: r.peReading,  shadow: r.peShadow  } : (N.personality || r.personality || {});
+  const BD = isFlat ? { title: r.bdTitle,  reading: r.bdReading,  shadow: r.bdShadow  } : (N.birthday    || r.birthday    || {});
+  const MT = isFlat ? { title: r.matTitle, reading: r.matReading, shadow: r.matShadow } : (N.maturity    || r.maturity    || {});
+  const TM = isFlat ? { reading: r.pyReading } : (N.timing || {});
+  const SY = isFlat ? { reading: r.synthesis  } : (N.synthesis || {});
+
+  // Chinese Zodiac prose — flat or nested
+  const czPortrait = isFlat ? r.czPortrait : (CZ.reading || r.chineseZodiac?.reading || "");
+  const czElement  = isFlat ? r.czElement  : (CZ.elementalNature || r.chineseZodiac?.elementalNature || "");
+  const czThemes   = isFlat ? r.czThemes   : (CZ.lifeThemes || r.chineseZodiac?.lifeThemes || "");
+  const czAnimal   = isFlat ? r.czAnimalWisdom : (CZ.animalWisdom || r.chineseZodiac?.animalWisdom || "");
+  const czCross    = isFlat ? r.czCrossRef : (CZ.numerologyCrossReference || r.chineseZodiac?.numerologyCrossReference || "");
+
+  // Sun sign
+  const sunSign    = isFlat ? (r.sunSign?.sign || nums?.sunSign || "") : (r.sunSign?.sign || nums?.sunSign || "");
+  const sunReading = isFlat ? r.sunReading : r.sunSign?.reading;
+  const sunShadow  = isFlat ? r.sunShadow  : r.sunSign?.shadow;
 
   const copy = () => {
     navigator.clipboard.writeText(readingToText(r, name)).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2500); });
@@ -994,18 +1013,18 @@ function ReadingView({ reading: r, name, onEmail, emailSt, nums, tierId }) {
       </div>}
     </Sec>}
 
-    {(r.sunSign || nums?.sunSign) && <Sec icon="☀️" title={"Sun Sign — " + (r.sunSign?.sign || nums?.sunSign || "")} color="#F4B942">
+    {(sunSign) && <Sec icon="☀️" title={"Sun Sign — " + sunSign} color="#F4B942">
       <div style={{display:"flex",alignItems:"center",gap:14,marginBottom:14,padding:"10px 14px",background:"rgba(244,185,66,.05)",border:"1px solid rgba(244,185,66,.2)",borderRadius:6}}>
         <div style={{fontSize:32}}>☀️</div>
         <div>
-          <div style={{fontFamily:"'Cinzel',serif",fontSize:14,color:"#F4B942",fontWeight:600,marginBottom:2}}>{r.sunSign?.sign || nums?.sunSign}</div>
+          <div style={{fontFamily:"'Cinzel',serif",fontSize:14,color:"#F4B942",fontWeight:600,marginBottom:2}}>{sunSign}</div>
           <div style={{fontSize:11,color:"rgba(255,255,255,.4)"}}>Core identity · Life force · Soul expression</div>
         </div>
       </div>
-      {r.sunSign?.reading && <InfoBlock label="Sun Sign Reading" text={r.sunSign.reading} color="#F4B942" />}
-      {r.sunSign?.shadow && <div style={{marginTop:8,padding:"9px 13px",background:"rgba(0,0,0,.2)",borderLeft:"2px solid rgba(244,185,66,.4)",borderRadius:"0 4px 4px 0"}}>
+      {sunReading && <InfoBlock label="Sun Sign Reading" text={sunReading} color="#F4B942" />}
+      {sunShadow && <div style={{marginTop:8,padding:"9px 13px",background:"rgba(0,0,0,.2)",borderLeft:"2px solid rgba(244,185,66,.4)",borderRadius:"0 4px 4px 0"}}>
         <div style={{fontFamily:"'Cinzel',serif",fontSize:9,letterSpacing:".14em",color:"#F4B942",textTransform:"uppercase",marginBottom:4}}>Shadow</div>
-        <p style={{fontSize:12,color:"rgba(255,255,255,.48)",lineHeight:1.8,fontStyle:"italic",margin:0}}>{r.sunSign.shadow}</p>
+        <p style={{fontSize:12,color:"rgba(255,255,255,.48)",lineHeight:1.8,fontStyle:"italic",margin:0}}>{sunShadow}</p>
       </div>}
     </Sec>}
     {r.marriageUnion && <Sec icon="💍" title={"Marriage / Union — Life Path " + r.marriageUnion.unionLifePath} color="#D47E9B">
@@ -1040,13 +1059,13 @@ function ReadingView({ reading: r, name, onEmail, emailSt, nums, tierId }) {
           </div>
         ))}
       </div>
-      {(CZ.reading || r.chineseZodiac?.reading) && <InfoBlock label="Three Animal Portrait" text={CZ.reading || r.chineseZodiac.reading} color="#D47E9B" />}
-      {(CZ.elementalNature || r.chineseZodiac?.elementalNature) && <InfoBlock label={"Elemental Nature — " + (nums?.chinese?.element || "")} text={CZ.elementalNature || r.chineseZodiac.elementalNature} color="#C8A96E" />}
-      {(CZ.lifeThemes || r.chineseZodiac?.lifeThemes) && <InfoBlock label="Life Themes & Soul Contracts" text={CZ.lifeThemes || r.chineseZodiac.lifeThemes} color="#9B7ED4" />}
-      {(CZ.animalWisdom || r.chineseZodiac?.animalWisdom) && <InfoBlock label="Inner & Secret Animal Wisdom" text={CZ.animalWisdom || r.chineseZodiac.animalWisdom} color="#C8A96E" />}
-      {(CZ.numerologyCrossReference || r.chineseZodiac?.numerologyCrossReference) && <div style={{marginTop:8,padding:"12px 14px",background:"rgba(200,169,110,.05)",border:"1px solid rgba(200,169,110,.18)",borderRadius:6}}>
+      {czPortrait && <InfoBlock label="Three Animal Portrait" text={czPortrait} color="#D47E9B" />}
+      {czElement  && <InfoBlock label={"Elemental Nature — " + (nums?.chinese?.element || "")} text={czElement} color="#C8A96E" />}
+      {czThemes   && <InfoBlock label="Life Themes & Soul Contracts" text={czThemes} color="#9B7ED4" />}
+      {czAnimal   && <InfoBlock label="Inner & Secret Animal Wisdom" text={czAnimal} color="#C8A96E" />}
+      {czCross    && <div style={{marginTop:8,padding:"12px 14px",background:"rgba(200,169,110,.05)",border:"1px solid rgba(200,169,110,.18)",borderRadius:6}}>
         <div style={{fontFamily:"'Cinzel',serif",fontSize:9,letterSpacing:".14em",textTransform:"uppercase",color:"#C8A96E",marginBottom:6}}>✦ Cross-Reference with Numerology</div>
-        <p style={{fontSize:13,color:"rgba(255,255,255,.68)",lineHeight:1.9,margin:0}}>{CZ.numerologyCrossReference || r.chineseZodiac.numerologyCrossReference}</p>
+        <p style={{fontSize:13,color:"rgba(255,255,255,.68)",lineHeight:1.9,margin:0}}>{czCross}</p>
       </div>}
     </Sec>}
 
