@@ -275,6 +275,8 @@ function buildPrompt(p, tier) {
     lines.push("OUTPUT: Return ONLY a raw JSON object. No markdown, no backticks, no preamble. Start with { end with }. No newlines inside string values. Use single quotes inside strings, never double quotes inside strings.");
     lines.push("");
     lines.push("PERSON: " + name + " | DOB: " + p.bMonth+"/"+p.bDay+"/"+p.bYear);
+    lines.push("Birth name: " + n.fullName);
+    if (n.hasCurrent) lines.push("Current name: " + n.currentFull + " (name changed — note the energy shift)");
     lines.push("NUMBERS — do not recalculate:");
     lines.push("Life Path: " + formatNum(n.lifePath) + " | Expression: " + formatNum(n.expression) + " | Soul Urge: " + formatNum(n.soulUrge));
     lines.push("Personality: " + formatNum(n.personality) + " | Birthday: " + formatNum(n.birthday) + " | Personal Year: " + n.personalYear);
@@ -1189,20 +1191,24 @@ export default function App() {
 
 
 
-            {isFull && <>
-              <GD label="Current Name (if different from birth)" />
-              <div style={{background:"rgba(200,169,110,.04)",border:"1px solid rgba(200,169,110,.12)",borderRadius:6,padding:"10px 14px",marginBottom:12,fontSize:11,color:"rgba(255,255,255,.38)",fontStyle:"italic",lineHeight:1.8}}>
-                ✦ If your name has changed — married name, chosen name, legally changed — your reading will include a <strong style={{color:"rgba(200,169,110,.7)"}}>then vs now comparison</strong> showing what numerological energies shifted.
-              </div>
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
-                <TI l="Current First Name" v={person.currentFirst} s={v => upd({currentFirst:v})} p="If different from birth" />
-                <TI l="Current Middle Name" v={person.currentMiddle} s={v => upd({currentMiddle:v})} p="If applicable" />
-                <TI l="Current Last Name" v={person.currentLast} s={v => upd({currentLast:v})} p="Married / chosen name" />
-              </div>
-            </>}
+          </div>
 
+          {/* CURRENT NAME — own card so it always renders */}
+          <div style={{ background:"rgba(255,255,255,.015)", border:"1px solid rgba(200,169,110,.22)", borderRadius:9, padding:"22px 20px", marginBottom:18, position:"relative", overflow:"hidden" }}>
+            <div style={{ position:"absolute", top:0, left:0, right:0, height:2, background:"linear-gradient(to right,transparent,#C8A96E,transparent)" }} />
+            <GD label="Current Name (if different from birth)" />
+            <div style={{background:"rgba(200,169,110,.04)",border:"1px solid rgba(200,169,110,.12)",borderRadius:6,padding:"10px 14px",marginBottom:14,fontSize:11,color:"rgba(255,255,255,.38)",fontStyle:"italic",lineHeight:1.8}}>
+              ✦ If your name has changed — married name, chosen name, or legally changed — your reading will include a <strong style={{color:"rgba(200,169,110,.7)"}}>then vs now comparison</strong> showing what numerological energies shifted. Leave blank if unchanged.
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
+              <TI l="Current First Name" v={person.currentFirst} s={v => upd({currentFirst:v})} p="If different from birth" />
+              <TI l="Current Middle Name" v={person.currentMiddle} s={v => upd({currentMiddle:v})} p="If applicable" />
+              <TI l="Current Last Name" v={person.currentLast} s={v => upd({currentLast:v})} p="Married / chosen name" />
+            </div>
+          </div>
 
-
+          <div style={{ background:"rgba(255,255,255,.015)", border:"1px solid "+tier.color+"22", borderRadius:9, padding:"22px 20px", marginBottom:18, position:"relative", overflow:"hidden" }}>
+            <div style={{ position:"absolute", top:0, left:0, right:0, height:2, background:"linear-gradient(to right,transparent,"+tier.color+",transparent)" }} />
             {hasPeople && <>
               <GD label="Additional People — Compatibility Reading" />
               <p style={{fontSize:11,color:"rgba(255,255,255,.32)",marginBottom:14,fontStyle:"italic",lineHeight:1.8}}>
