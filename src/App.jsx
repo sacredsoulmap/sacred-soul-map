@@ -116,8 +116,14 @@ function calcNums(p) {
   const curD = today.getDate();
 
   // ── Core numbers ──
-  const mR = numReduce(m, false), dR = numReduce(d, false), yR = numReduce(digitSum(y), false);
-  const lifePath = numReduce(mR + dR + yR);
+  // Phillips Life Path: sum ALL digits of full birth date without double-reducing the year.
+  // e.g. 8/13/1983 → 8 + (1+3) + (1+9+8+3) = 8+4+21 = 33 → 33/6
+  // yDigitSum = 21 for Life Path; yR = fully reduced (3) for Challenges & Pinnacles
+  const mR = numReduce(m, false);
+  const dR = numReduce(d, false);
+  const yDigitSum = digitSum(y);               // e.g. 1983 -> 21
+  const yR = numReduce(yDigitSum, false);      // e.g. 21 -> 3  (used for Challenges/Pinnacles)
+  const lifePath = numReduce(mR + dR + yDigitSum); // 8+4+21=33 -> 33/6
   const expression = numReduce(nameSum(full));
   const soulUrge = numReduce(nameSum(full, "v"));
   const personality = numReduce(nameSum(full, "c"));
