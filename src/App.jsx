@@ -279,36 +279,47 @@ function buildPrompt(p, tier) {
   const lines = [];
 
   if (tier === "soul-spark") {
-    lines.push("You are a numerologist trained in David A. Phillips' Complete Book of Numerology.");
-    lines.push("OUTPUT: Return ONLY a raw JSON object. No markdown, no backticks, no preamble. Start with { end with }. No newlines inside string values. Use single quotes inside strings, never double quotes inside strings.");
+    lines.push("You are a master numerologist trained in David A. Phillips' Complete Book of Numerology. You write with depth, precision, and soul — not generic affirmations.");
+    lines.push("OUTPUT: Return ONLY a raw JSON object. No markdown, no backticks, no preamble. Start with { and end with }. No newlines or line breaks inside string values. Use single quotes inside strings, never double quotes inside strings.");
     lines.push("");
     lines.push("PERSON: " + name + " | DOB: " + p.bMonth+"/"+p.bDay+"/"+p.bYear);
     lines.push("Birth name: " + n.fullName);
-    if (n.hasCurrent) lines.push("Current name: " + n.currentFull + " (name changed — note the energy shift)");
-    lines.push("⚠ LOCKED NUMBERS — these are pre-calculated. Copy them EXACTLY into the number fields. Do NOT recalculate. Do NOT change any number value.");
-    lines.push("Life Path: " + formatNum(n.lifePath) + " | Expression: " + formatNum(n.expression) + " | Soul Urge: " + formatNum(n.soulUrge));
-    lines.push("Personality: " + formatNum(n.personality) + " | Birthday: " + formatNum(n.birthday) + " | Maturity: " + formatNum(n.maturity) + " | Personal Year: " + n.personalYear);
+    if (n.hasCurrent) lines.push("Current name: " + n.currentFull + " (name changed — factor this energy shift into the reading)");
+    lines.push("");
+    lines.push("⚠ LOCKED NUMBERS — pre-calculated using Phillips method. Copy EXACTLY into every number field. Do NOT recalculate, do NOT alter:");
+    lines.push("Life Path=" + formatNum(n.lifePath) + " | Expression=" + formatNum(n.expression) + " | Soul Urge=" + formatNum(n.soulUrge) + " | Personality=" + formatNum(n.personality) + " | Birthday=" + formatNum(n.birthday) + " | Maturity=" + formatNum(n.maturity) + " | Personal Year=" + n.personalYear);
     lines.push("Chinese Zodiac: " + n.chinese.element + " " + n.chinese.animal + " (Year) | " + n.chinese.innerAnimal + " (Inner) | " + n.chinese.secretAnimal + " (Secret)");
     lines.push("");
-    lines.push("RETURN THIS EXACT JSON STRUCTURE. For every 'number' field below, use the LOCKED NUMBER above — do not change it:");
+    lines.push("DEPTH GUIDE — for each number, go well beyond surface keywords. Use Phillips' actual teachings:");
+    lines.push("- Life Path: the soul's core curriculum — WHY they chose this life, what they are here to master, the higher and lower expressions");
+    lines.push("- Expression: the talents baked into the birth name — the role they are built to play in the world");
+    lines.push("- Soul Urge: the private inner hunger — what they NEED to feel fulfilled, often hidden even from themselves");
+    lines.push("- Personality: the mask the world sees — how they come across vs who they actually are inside");
+    lines.push("- Birthday: a specific innate gift — the special skill or way of operating that came pre-loaded");
+    lines.push("- Maturity: the soul destination — what they are BECOMING, most felt after age 35-40");
+    lines.push("- Synthesis: how these 6 numbers work TOGETHER — where they harmonize, where they create tension, what the pattern reveals about this specific soul");
+    lines.push("");
+    lines.push("RETURN THIS EXACT JSON:");
     const sparkSchema = {
-      cosmicSnapshot: "2 vivid sentences — weave Life Path " + formatNum(n.lifePath) + " and Personal Year " + n.personalYear + " into the soul theme of this chapter for " + name,
+      cosmicSnapshot: "3 vivid sentences — open with the Life Path " + formatNum(n.lifePath) + " soul mission, weave in Personal Year " + n.personalYear + " current energy, close with what this moment in " + name + "'s life is truly about",
       numerology: {
-        lifePath:    { number: formatNum(n.lifePath),    title: "3-word soul-level title", reading: "3 rich sentences on soul mission and Life Path " + formatNum(n.lifePath) + " gifts. Include master number depth.", shadow: "1 sentence on the shadow/ego trap" },
-        expression:  { number: formatNum(n.expression),  title: "3-word destiny title",    reading: "2 sentences on natural talents encoded in the birth name and the outer destiny role" },
-        soulUrge:    { number: formatNum(n.soulUrge),    title: "3-word heart title",      reading: "2 sentences on the deepest inner craving and what this soul must feel to thrive" },
-        personality: { number: formatNum(n.personality), title: "3-word mask title",       reading: "2 sentences on how the world perceives " + name + " before they speak, and how Personality " + formatNum(n.personality) + " differs from the Soul Urge beneath it" },
-        birthday:    { number: formatNum(n.birthday),    title: "2-word gift title",       reading: "2 sentences on the innate special talent embedded in Birthday Number " + formatNum(n.birthday) + " per Phillips" },
-        maturity:    { number: formatNum(n.maturity),    title: "3-word future title",     reading: "2 sentences on Maturity Number " + formatNum(n.maturity) + " — the soul destination that becomes dominant after age 35-40 and what " + name + " is growing into" },
-        timing:      { personalYear: n.personalYear,     reading: "2 sentences on what Personal Year " + n.personalYear + " is specifically calling " + name + " to do, build, or release right now" }
+        lifePath:    { number: formatNum(n.lifePath),    title: "3-word soul title",   reading: "4 sentences — the soul curriculum of Life Path " + formatNum(n.lifePath) + ": why this path was chosen, what it demands, what mastery looks like, and the higher calling when fully expressed. For master numbers include the dual nature and the weight of the calling.", shadow: "2 sentences — the specific ego trap and lower expression of Life Path " + formatNum(n.lifePath) + " that " + name + " must watch for" },
+        expression:  { number: formatNum(n.expression),  title: "3-word destiny title", reading: "3 sentences — the natural talents and abilities encoded in " + name + "'s birth name, the type of work and contribution they are built for, and how Expression " + formatNum(n.expression) + " wants to show up in the world", shadow: "1 sentence — the shadow side of this Expression when unowned" },
+        soulUrge:    { number: formatNum(n.soulUrge),    title: "3-word heart title",   reading: "3 sentences — the deep private hunger of Soul Urge " + formatNum(n.soulUrge) + ": what " + name + " must feel to truly thrive, what they secretly crave in relationships and life, and how this inner need drives decisions even when unrecognized", shadow: "1 sentence — what happens when this soul urge is chronically unmet" },
+        personality: { number: formatNum(n.personality), title: "3-word mask title",    reading: "3 sentences — the impression Personality " + formatNum(n.personality) + " creates before " + name + " says a word, how others perceive and approach them, and how this outer mask relates to (or masks) the Soul Urge " + formatNum(n.soulUrge) + " beneath it", shadow: "1 sentence — the misreading or projection this personality number often attracts" },
+        birthday:    { number: formatNum(n.birthday),    title: "2-word gift title",    reading: "3 sentences — the specific innate gift embedded in Birthday Number " + formatNum(n.birthday) + " per Phillips: what came pre-loaded, how this talent operates naturally, and how it supports the Life Path mission", shadow: "1 sentence — the challenge that accompanies this birthday gift" },
+        maturity:    { number: formatNum(n.maturity),    title: "3-word becoming title", reading: "3 sentences — Maturity Number " + formatNum(n.maturity) + " is the soul destination that becomes the dominant force after age 35-40: what " + name + " is growing INTO, how life is reorganizing itself to deliver this energy, and what will feel increasingly true and right as they step into it", shadow: "1 sentence — what resistance looks like as this maturity number emerges" },
+        timing:      { personalYear: n.personalYear,     reading: "3 sentences — Personal Year " + n.personalYear + " in 2026: the specific theme, what must be built or released, and the single most important thing this year is asking of " + name },
+        synthesis:   { reading: "4 sentences — how these 6 numbers work together as a SYSTEM for " + name + ": identify the key harmony (where 2+ numbers reinforce each other), the key tension (where numbers create internal friction), the dominant pattern across all numbers, and the core soul challenge and gift this entire blueprint reveals. Be specific to these exact numbers — " + formatNum(n.lifePath) + " + " + formatNum(n.expression) + " + " + formatNum(n.soulUrge) + " + " + formatNum(n.personality) + " + " + formatNum(n.birthday) + " + " + formatNum(n.maturity) }
       },
       chineseZodiac: {
         yearAnimal:   n.chinese.element + " " + n.chinese.animal,
         innerAnimal:  n.chinese.innerAnimal,
         secretAnimal: n.chinese.secretAnimal,
-        reading: "3 sentences — the three-animal portrait for " + name + ": Year Animal public self, Inner Animal private nature, Secret Animal subconscious drive"
+        reading: "4 sentences — the three-animal system for " + name + ": how the " + n.chinese.element + " " + n.chinese.animal + " shapes their public face and how others experience them, how the " + n.chinese.innerAnimal + " Inner Animal reveals their true private nature, how the " + n.chinese.secretAnimal + " Secret Animal operates as a subconscious drive, and how all three animals together create the complexity of who " + name + " actually is",
+        numerologyCrossReference: "2 sentences — how the Chinese Zodiac energy specifically amplifies or creates tension with Life Path " + formatNum(n.lifePath) + " and Expression " + formatNum(n.expression)
       },
-      soulMessage: "4 sentences written directly to " + name + ". Weave Life Path " + formatNum(n.lifePath) + ", Personal Year " + n.personalYear + ", and Chinese Zodiac. End with one irreducible truth they can carry forever."
+      soulMessage: "5 sentences written directly to " + name + " as if you are speaking soul to soul. Weave Life Path " + formatNum(n.lifePath) + ", the synthesis pattern, Personal Year " + n.personalYear + ", and the animal energy. Acknowledge both the gift AND the weight of this blueprint. End with one irreducible truth they can carry as an anchor."
     };
     lines.push(JSON.stringify(sparkSchema));
     return lines.join("\n");
@@ -868,9 +879,17 @@ function ReadingView({ reading: r, name, onEmail, emailSt }) {
       {LP && <Card title="Life Path" number={LP.number} subtitle={LP.title} text={LP.reading} shadow={LP.shadow} gifts={LP.gifts} color="#C8A96E" />}
       {EX && <Card title="Expression / Destiny" number={EX.number} subtitle={EX.title} text={EX.reading} shadow={EX.shadow} color="#C8A96E" />}
       {SU && <Card title="Soul Urge / Heart's Desire" number={SU.number} subtitle={SU.title} text={SU.reading} shadow={SU.shadow} color="#C8A96E" />}
-      {PE && <Card title="Personality" number={PE.number} subtitle={PE.title} text={PE.reading} color="#7EC4D4" />}
-      {BD && <Card title="Birthday Number" number={BD.number} subtitle={BD.title} text={BD.reading} color="#7EC4D4" />}
-      {N.maturity && <Card title="Maturity Number" number={N.maturity.number} text={N.maturity.reading} color="#7EC4D4" />}
+      {PE && <Card title="Personality" number={PE.number} subtitle={PE.title} text={PE.reading} shadow={PE.shadow} color="#7EC4D4" />}
+      {BD && <Card title="Birthday Number" number={BD.number} subtitle={BD.title} text={BD.reading} shadow={BD.shadow} color="#7EC4D4" />}
+      {N.maturity && <Card title="Maturity Number" number={N.maturity.number} subtitle={N.maturity.title} text={N.maturity.reading} shadow={N.maturity.shadow} color="#7EC4D4" />}
+      {N.timing && <div style={{marginTop:12,padding:"14px 16px",background:"rgba(126,196,212,.05)",border:"1px solid rgba(126,196,212,.2)",borderRadius:7}}>
+        <div style={{fontFamily:"'Cinzel',serif",fontSize:9,letterSpacing:".16em",textTransform:"uppercase",color:"#7EC4D4",marginBottom:7}}>🗓 Personal Year {N.timing.personalYear} — Your Timing Right Now</div>
+        <p style={{fontSize:13,color:"rgba(255,255,255,.72)",lineHeight:1.9,margin:0}}>{N.timing.reading}</p>
+      </div>}
+      {N.synthesis && <div style={{marginTop:14,padding:"16px 18px",background:"linear-gradient(135deg,rgba(200,169,110,.06),rgba(155,126,212,.06))",border:"1px solid rgba(200,169,110,.25)",borderRadius:8}}>
+        <div style={{fontFamily:"'Cinzel',serif",fontSize:9,letterSpacing:".18em",textTransform:"uppercase",color:"#C8A96E",marginBottom:9}}>✦ How Your Numbers Work Together</div>
+        <p style={{fontSize:13,color:"rgba(255,255,255,.78)",lineHeight:2,margin:0}}>{N.synthesis.reading}</p>
+      </div>}
     </Sec>}
 
     {N.firstVowel && <Sec icon="🔡" title="First Vowel · Subconscious Self · Bridge Numbers" color="#D47E9B">
@@ -927,10 +946,6 @@ function ReadingView({ reading: r, name, onEmail, emailSt }) {
       {N.pinnacles && <InfoBlock label={"Pinnacle Arc · Active: " + N.pinnacles.active} text={N.pinnacles.reading} color="#9B7ED4" />}
     </Sec>}
 
-    {N.timing && <Sec icon="🗓" title={"Personal Year " + (N.timing.personalYear || "") + " — Your Timing Right Now"} color="#7EC4D4">
-      <p style={{ fontSize:13, color:"rgba(255,255,255,.72)", lineHeight:1.88, padding:"4px 0" }}>{N.timing.reading}</p>
-    </Sec>}
-
     {(N.missing || N.karmicReading) && <Sec icon="🔓" title="Missing Numbers & Karmic Debts" color="#D47E9B">
       {N.missing && N.missing.reading && <InfoBlock label={"Missing Numbers — " + (N.missing.numbers || []).join(", ") || "None"} text={N.missing.reading} color="#9B7ED4" />}
       {N.karmicReading && N.karmicReading !== "null" && <div style={{ padding:"11px 14px", background:"rgba(212,126,155,.06)", border:"1px solid rgba(212,126,155,.2)", borderRadius:6 }}>
@@ -975,8 +990,12 @@ function ReadingView({ reading: r, name, onEmail, emailSt }) {
         ))}
       </div>
       <InfoBlock label="Reading" text={r.chineseZodiac.reading} color="#D47E9B" />
-      <InfoBlock label="Three Animals Portrait" text={r.chineseZodiac.threeAnimals} color="#D47E9B" />
-      <InfoBlock label="Cross-Reference with Numerology" text={r.chineseZodiac.crossReference} color="#C8A96E" />
+      {r.chineseZodiac.threeAnimals && <InfoBlock label="Three Animals Portrait" text={r.chineseZodiac.threeAnimals} color="#D47E9B" />}
+      {r.chineseZodiac.numerologyCrossReference && <div style={{marginTop:8,padding:"12px 14px",background:"rgba(200,169,110,.05)",border:"1px solid rgba(200,169,110,.18)",borderRadius:6}}>
+        <div style={{fontFamily:"'Cinzel',serif",fontSize:9,letterSpacing:".14em",textTransform:"uppercase",color:"#C8A96E",marginBottom:6}}>✦ Cross-Reference with Numerology</div>
+        <p style={{fontSize:13,color:"rgba(255,255,255,.68)",lineHeight:1.9,margin:0}}>{r.chineseZodiac.numerologyCrossReference}</p>
+      </div>}
+      {r.chineseZodiac.crossReference && <InfoBlock label="Cross-Reference with Numerology" text={r.chineseZodiac.crossReference} color="#C8A96E" />}
     </Sec>}
 
     {r.nameEvolution && <Sec icon="✦" title={"Name Evolution: " + r.nameEvolution.birthName + " → " + r.nameEvolution.currentName} color="#C8A96E">
