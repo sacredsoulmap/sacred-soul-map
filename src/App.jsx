@@ -257,14 +257,15 @@ function calcNums(p) {
 // ─── PROMPT BUILDER ───────────────────────────────────────
 function buildPrompt(p, tier) {
   const n = calcNums(p);
-  const name = p.preferredName || p.legalFirst || "this soul";
+  const name = p.legalFirst || "this soul";
   const isFull = tier !== "soul-spark";
 
   // ── Additional people numerology ──
   const peopleData = (p.people || []).filter(p2 => p2.firstName && p2.bMonth && p2.bDay && p2.bYear).map(p2 => {
     const m2 = Number(p2.bMonth), d2 = Number(p2.bDay), y2 = Number(p2.bYear);
     const lp2 = numReduce(numReduce(m2,false) + numReduce(d2,false) + numReduce(digitSum(y2),false));
-    return { name: p2.firstName + (p2.lastName ? " " + p2.lastName : ""), lifePath: lp2, dob: p2.bMonth+"/"+p2.bDay+"/"+p2.bYear, relationship: p2.relationship || "Other" };
+    const fullName = [p2.firstName, p2.middleName, p2.lastName].filter(Boolean).join(" ");
+    return { name: fullName, lifePath: lp2, dob: p2.bMonth+"/"+p2.bDay+"/"+p2.bYear, relationship: p2.relationship || "Other" };
   });
 
   const lines = [];
@@ -313,10 +314,6 @@ function buildPrompt(p, tier) {
   lines.push("Chinese Zodiac: " + n.chinese.element + " " + n.chinese.animal + " (" + n.chinese.polarity + ") | Inner: " + n.chinese.innerAnimal + " | Secret: " + n.chinese.secretAnimal);
   if (n.sunSign) lines.push("Sun Sign: " + n.sunSign);
   lines.push("");
-  if (p.shadowThemes && p.shadowThemes.length) lines.push("Shadow themes selected: " + p.shadowThemes.join(", "));
-  if (p.childhoodWound) lines.push("Wound shared: " + p.childhoodWound);
-  if (p.shadowGoal) lines.push("Shadow goal: " + p.shadowGoal);
-  if (p.goals) lines.push("Intentions: " + p.goals);
   // Marriage date numerology
   let marriageLP = null;
   if (p.marriageMonth && p.marriageDay && p.marriageYear) {
@@ -441,10 +438,10 @@ function buildPrompt(p, tier) {
     ...(n.sunSign ? { sunSign: { sign: n.sunSign, reading: "2 sentences on how " + n.sunSign + " Sun energy interplays with Life Path " + formatNum(n.lifePath) + " — where they harmonize or create productive tension" } } : {}),
 
     shadowWork: {
-      coreWound: "3 sentences identifying the wound thread running through the numerology — name the specific numbers driving this pattern. Only reference biographical details explicitly shared above.",
-      theGold: "3 sentences on what integrating this shadow unlocks — name the specific superpower hidden in Life Path " + formatNum(n.lifePath) + " and the missing numbers",
-      soulInvitation: "2 sentences — what is Personal Year " + n.personalYear + " and Challenge " + n.activeChallenge + " specifically inviting " + name + " to stop doing and start embodying",
-      prompts: "5 shadow journal prompts, each referencing a specific number or placement. Separate with | character. No generic prompts."
+      coreWound: "3 sentences — read the shadow DIRECTLY from the numbers. Life Path " + formatNum(n.lifePath) + " shadow, missing " + (n.missing.join(" and ") || "no numbers") + " as karmic blind spot, and how the dominant plane (" + n.dominantPlane + ") creates the unconscious pattern. Name it precisely.",
+      theGold: "3 sentences on the gold hidden in the shadow — what Life Path " + formatNum(n.lifePath) + " unlocks when the ego trap is integrated, and what the absent arrows reveal as the soul's earned gifts",
+      soulInvitation: "2 sentences — Personal Year " + n.personalYear + " + Challenge " + n.activeChallenge + " are creating a specific pressure point right now. Name exactly what " + name + " is being asked to release and what to step into.",
+      prompts: "5 shadow journal prompts derived entirely from the numbers — Life Path, missing numbers, absent arrows, karmic debts. Each prompt names a specific number. Separate with | character."
     },
 
     ...(n.hasCurrent ? { nameEvolution: {
@@ -717,13 +714,12 @@ function ChakraPicker({selected, onChange}) {
 }
 
 const emptyP = () => ({
-  preferredName:"", legalFirst:"", legalMiddle:"", legalLast:"",
+  legalFirst:"", legalMiddle:"", legalLast:"",
   currentFirst:"", currentMiddle:"", currentLast:"",
   bMonth:"", bDay:"", bYear:"", timeKnown:"", bHour:"", bMinute:"",
   bCity:"", bState:"", bCountry:"",
   marriageMonth:"", marriageDay:"", marriageYear:"",
-  shadowThemes:[], childhoodWound:"", shadowDepth:5, shadowGoal:"",
-  goals:"",
+
   people:[]
 });
 
@@ -1037,7 +1033,7 @@ export default function App() {
   const submit = async () => {
     if (!email) { alert("Please enter your email."); return; }
     setStep("gen"); setErr("");
-    const msgs = ["Calculating your sacred numbers…","Building the Arrows of Pythagoras…","Reading the natal chart…","Weaving your complete reading…","Almost ready…"];
+    const msgs = ["Calculating your sacred numbers…","Building the Arrows of Pythagoras…","Weaving your cosmic portrait…","Weaving your complete reading…","Almost ready…"];
     let mi = 0; setGenMsg(msgs[0]);
     const iv = setInterval(() => { mi = (mi+1) % msgs.length; setGenMsg(msgs[mi]); }, 2800);
     try {
@@ -1050,7 +1046,7 @@ export default function App() {
   };
 
   const sendMail = async () => {
-    const name = person.preferredName || person.legalFirst || "Friend";
+    const name = person.legalFirst || "Friend";
     setEmailSt("sending");
     try { await sendEmail(email, name, tier && tier.name || "Cosmic", reading); setEmailSt("sent"); }
     catch (e) { console.error(e); setEmailSt("error"); }
@@ -1077,7 +1073,7 @@ export default function App() {
       <div style={{ textAlign:"center", paddingTop:44, paddingBottom:24, animation:"fu .9s ease both" }}>
         <div style={{ fontFamily:"'Cinzel Decorative',serif", fontSize:9, letterSpacing:".4em", color:"#C8A96E", textTransform:"uppercase", marginBottom:10, opacity:.7 }}>Ancient Wisdom · Modern Clarity</div>
         <h1 style={{ fontFamily:"'Cinzel Decorative',serif", fontSize:"clamp(22px,4.5vw,40px)", fontWeight:400, lineHeight:1.2, background:"linear-gradient(135deg,#fff 0%,#C8A96E 50%,#fff 100%)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", marginBottom:10 }}>Your Cosmic Blueprint</h1>
-        <p style={{ color:"rgba(255,255,255,.35)", maxWidth:560, margin:"0 auto", fontSize:12, lineHeight:2, fontStyle:"italic" }}>Complete Numerology (David A. Phillips) · Natal Chart · Chinese Zodiac · Arrows of Pythagoras · Shadow Work</p>
+        <p style={{ color:"rgba(255,255,255,.35)", maxWidth:560, margin:"0 auto", fontSize:12, lineHeight:2, fontStyle:"italic" }}>Complete Numerology (David A. Phillips) · Chinese Zodiac · Arrows of Pythagoras · Shadow Work</p>
       </div>
 
       <div style={{ maxWidth:880, margin:"0 auto" }}>
@@ -1123,8 +1119,6 @@ export default function App() {
           <div style={{ background:"rgba(255,255,255,.015)", border:"1px solid "+tier.color+"22", borderRadius:9, padding:"22px 20px", marginBottom:18, position:"relative", overflow:"hidden" }}>
             <div style={{ position:"absolute", top:0, left:0, right:0, height:2, background:"linear-gradient(to right,transparent,"+tier.color+",transparent)" }} />
 
-            <TI l="Preferred Name" v={person.preferredName} s={v => upd({preferredName:v})} p="What you go by" />
-
             <GD label="Full Legal Birth Name" />
             <div style={{fontSize:11,color:"rgba(255,255,255,.35)",marginBottom:10,fontStyle:"italic",lineHeight:1.7}}>Your birth certificate name is the foundation of your numerology. Every letter carries a frequency. Middle name included if you have one.</div>
             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:10 }}>
@@ -1167,18 +1161,7 @@ export default function App() {
               </div>
             </>}
 
-            <GD label="Shadow Work" />
-            <p style={{fontSize:12,color:"rgba(255,255,255,.32)",marginBottom:14,fontStyle:"italic",lineHeight:1.8}}>🌑 The shadow is not what is wrong with you — it is what has been unwitnessed. Your selections shape the depth of this section.</p>
-            <MP label="Shadow themes active in your life right now" items={SHADOW_THEMES} selected={person.shadowThemes} onChange={v => upd({shadowThemes:v})} color="#9B7ED4" />
-            <TTA l="Earliest wound that still echoes — Optional" v={person.childhoodWound} s={v => upd({childhoodWound:v})} p="A few words is enough. Only what feels safe to share." rows={2} />
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:16,alignItems:"end"}}>
-              <TS l="Primary shadow goal" v={person.shadowGoal} s={v => upd({shadowGoal:v})} opts={[{v:"",l:"— Select —"},{v:"patterns",l:"Understand repeating patterns"},{v:"release",l:"Release what no longer serves"},{v:"child",l:"Heal the inner child"},{v:"reclaim",l:"Reclaim disowned parts"},{v:"integrate",l:"Integrate light and shadow"},{v:"beginning",l:"Just beginning"}]} />
-              <div>
-                <Lbl c={"Depth readiness: " + (person.shadowDepth||5) + " / 10"} />
-                <p style={{fontSize:10,color:"rgba(255,255,255,.25)",marginBottom:8,fontStyle:"italic"}}>Calibrates tone of shadow section</p>
-                <input type="range" min={1} max={10} value={person.shadowDepth||5} onChange={e => upd({shadowDepth:Number(e.target.value)})} style={{width:"100%",accentColor:"#9B7ED4"}} />
-              </div>
-            </div>
+
 
             {hasPeople && <>
               <GD label="Additional People — Compatibility Reading" />
@@ -1196,9 +1179,10 @@ export default function App() {
                     </div>
                     <button onClick={() => upd({people:(person.people||[]).filter((_,j)=>j!==i)})} style={{background:"transparent",border:"none",color:"rgba(255,255,255,.25)",cursor:"pointer",fontSize:11,fontFamily:"sans-serif"}}>✕ Remove</button>
                   </div>
-                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
-                    <TI l="First Name" v={p2.firstName} s={v => { const arr=[...(person.people||[])]; arr[i]={...arr[i],firstName:v}; upd({people:arr}); }} p="Name" />
-                    <TI l="Last Name (optional)" v={p2.lastName} s={v => { const arr=[...(person.people||[])]; arr[i]={...arr[i],lastName:v}; upd({people:arr}); }} p="Surname" />
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:10}}>
+                    <TI l="First Name" v={p2.firstName} s={v => { const arr=[...(person.people||[])]; arr[i]={...arr[i],firstName:v}; upd({people:arr}); }} p="First" />
+                    <TI l="Middle Name" v={p2.middleName||""} s={v => { const arr=[...(person.people||[])]; arr[i]={...arr[i],middleName:v}; upd({people:arr}); }} p="Middle (optional)" />
+                    <TI l="Last Name" v={p2.lastName} s={v => { const arr=[...(person.people||[])]; arr[i]={...arr[i],lastName:v}; upd({people:arr}); }} p="Last (optional)" />
                   </div>
                   <TS l="Relationship to You" v={p2.relationship} s={v => { const arr=[...(person.people||[])]; arr[i]={...arr[i],relationship:v}; upd({people:arr}); }} opts={[{v:"",l:"— Select —"},{v:"Romantic Partner",l:"💑 Romantic Partner"},{v:"Spouse",l:"💍 Spouse"},{v:"Ex Partner",l:"💔 Ex Partner"},{v:"Child",l:"👶 Child"},{v:"Parent",l:"👪 Parent"},{v:"Sibling",l:"🤝 Sibling"},{v:"Best Friend",l:"✨ Best Friend"},{v:"Close Friend",l:"🌟 Close Friend"},{v:"Business Partner",l:"💼 Business Partner"},{v:"Colleague",l:"🏢 Colleague"},{v:"Other",l:"Other"}]} />
                   <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 2fr",gap:10,marginTop:6}}>
@@ -1221,8 +1205,7 @@ export default function App() {
               </div>
             </>}
 
-            <GD label="Intentions" />
-            <TTA l="What are you most hoping to understand or receive from this reading?" v={person.goals} s={v => upd({goals:v})} p="What feels most alive, stuck, or calling right now…" rows={3} />
+
           </div>
 
           <div style={{ background:"rgba(255,255,255,.015)", border:"1px solid rgba(200,169,110,.1)", borderRadius:8, padding:20, marginBottom:20 }}>
@@ -1333,11 +1316,11 @@ export default function App() {
           <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:22, flexWrap:"wrap", gap:10 }}>
             <div>
               <div style={{ fontFamily:"'Cinzel',serif", fontSize:9, letterSpacing:".2em", color:(tier && tier.color), textTransform:"uppercase", marginBottom:3 }}>Your Reading</div>
-              <h2 style={{ fontFamily:"'Cinzel Decorative',serif", fontSize:19, color:"#fff" }}>{tier && tier.name} — {person.preferredName || person.legalFirst || "Your Reading"}</h2>
+              <h2 style={{ fontFamily:"'Cinzel Decorative',serif", fontSize:19, color:"#fff" }}>{tier && tier.name} — {person.legalFirst || "Your Reading"}</h2>
             </div>
             <button onClick={reset} style={{ background:"transparent", border:"1px solid rgba(255,255,255,.1)", color:"rgba(255,255,255,.38)", padding:"7px 13px", borderRadius:4, cursor:"pointer", fontSize:11, fontFamily:"'Cinzel',serif" }}>← New Reading</button>
           </div>
-          <ReadingView reading={reading} name={person.preferredName || person.legalFirst || "Friend"} onEmail={sendMail} emailSt={emailSt} />
+          <ReadingView reading={reading} name={person.legalFirst || "Friend"} onEmail={sendMail} emailSt={emailSt} />
         </div>}
 
       </div>
