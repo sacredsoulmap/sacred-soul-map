@@ -202,7 +202,9 @@ function calcNums(p) {
   const polarity = ["Yang","Yin","Yang","Yin","Yang","Yin","Yang","Yin","Yang","Yin","Yang","Yin"];
   const ai = ((y - 4) % 12 + 12) % 12;
   // Inner animal = birth month animal (approx by month)
-  const monthAnimalIdx = ((m - 1 + 12) % 12);
+  // Chinese inner animal by birth month (Jan=Ox, Feb=Tiger, Mar=Rabbit... Aug=Monkey, Dec=Rat)
+  const MONTH_ANIMAL_MAP = [null,1,2,3,4,5,6,7,8,9,10,11,0]; // index 1-12 → animal array index
+  const monthAnimalIdx = MONTH_ANIMAL_MAP[m] ?? 0;
   // True/Secret animal = birth hour animal (from bHour if known)
   let secretAnimalIdx = null;
   if (p.bHour) {
@@ -297,6 +299,7 @@ function buildPrompt(p, tier) {
         soulUrge:   { number: formatNum(n.soulUrge),   title: "3-word heart title",      reading: "2 sentences — the deepest inner craving, what this soul must feel to thrive" },
         personality:{ number: formatNum(n.personality),title: "3-word mask title",       reading: "2 sentences — how the world perceives " + name + " before they speak, and how the Personality mask differs from the Soul Urge beneath it" },
         birthday:   { number: formatNum(n.birthday),   title: "2-word gift title",       reading: "2 sentences — the innate special talent embedded in the day of birth per Phillips" },
+        maturity:   { number: formatNum(n.maturity),   title: "3-word future title",     reading: "2 sentences — the Maturity Number " + formatNum(n.maturity) + " is the soul's destination, the number that grows more dominant after age 35-40. What is " + name + " growing into?" },
         timing:     { personalYear: n.personalYear,    reading: "2 sentences — what Personal Year " + n.personalYear + " is specifically calling " + name + " to do, build, or release right now in 2026" }
       },
       chineseZodiac: {
@@ -678,7 +681,7 @@ const TIERS = [
   { id: "soul-spark", name: "Soul Spark", price: "$47", color: "#C8A96E",
     desc: "Your 6 core numbers decoded · Chinese Zodiac · Personal Year · Soul Message",
     includes: [
-      "Life Path · Expression · Soul Urge · Personality · Birthday Number",
+      "Life Path · Expression · Soul Urge · Personality · Birthday · Maturity",
       "Personal Year timing — what 2026 is calling you toward",
       "Chinese Zodiac 3-animal portrait (Year · Inner · Secret)",
       "Soul Message written directly to you"
