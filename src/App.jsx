@@ -271,7 +271,7 @@ function buildPrompt(p, tier) {
   // ── Additional people numerology ──
   const peopleData = (p.people || []).filter(p2 => p2.firstName && p2.bMonth && p2.bDay && p2.bYear).map(p2 => {
     const m2 = Number(p2.bMonth), d2 = Number(p2.bDay), y2 = Number(p2.bYear);
-    const lp2 = numReduce(numReduce(m2,false) + numReduce(d2,false) + numReduce(digitSum(y2),false));
+    const lp2 = numReduce(numReduce(m2,false) + numReduce(d2,false) + digitSum(y2));
     const fullName = [p2.firstName, p2.middleName, p2.lastName].filter(Boolean).join(" ");
     return { name: fullName, lifePath: lp2, dob: p2.bMonth+"/"+p2.bDay+"/"+p2.bYear, relationship: p2.relationship || "Other" };
   });
@@ -285,38 +285,39 @@ function buildPrompt(p, tier) {
     lines.push("PERSON: " + name + " | DOB: " + p.bMonth+"/"+p.bDay+"/"+p.bYear);
     lines.push("Birth name: " + n.fullName);
     if (n.hasCurrent) lines.push("Current name: " + n.currentFull + " (name changed — note the energy shift)");
-    lines.push("NUMBERS — do not recalculate:");
+    lines.push("⚠ LOCKED NUMBERS — these are pre-calculated. Copy them EXACTLY into the number fields. Do NOT recalculate. Do NOT change any number value.");
     lines.push("Life Path: " + formatNum(n.lifePath) + " | Expression: " + formatNum(n.expression) + " | Soul Urge: " + formatNum(n.soulUrge));
-    lines.push("Personality: " + formatNum(n.personality) + " | Birthday: " + formatNum(n.birthday) + " | Personal Year: " + n.personalYear);
+    lines.push("Personality: " + formatNum(n.personality) + " | Birthday: " + formatNum(n.birthday) + " | Maturity: " + formatNum(n.maturity) + " | Personal Year: " + n.personalYear);
     lines.push("Chinese Zodiac: " + n.chinese.element + " " + n.chinese.animal + " (Year) | " + n.chinese.innerAnimal + " (Inner) | " + n.chinese.secretAnimal + " (Secret)");
     lines.push("");
-    lines.push("RETURN THIS EXACT JSON — all fields required:");
-    lines.push(JSON.stringify({
+    lines.push("RETURN THIS EXACT JSON STRUCTURE. For every 'number' field below, use the LOCKED NUMBER above — do not change it:");
+    const sparkSchema = {
       cosmicSnapshot: "2 vivid sentences — weave Life Path " + formatNum(n.lifePath) + " and Personal Year " + n.personalYear + " into the soul theme of this chapter for " + name,
       numerology: {
-        lifePath:   { number: formatNum(n.lifePath),   title: "3-word soul-level title", reading: "3 rich sentences — soul mission, how Life Path " + formatNum(n.lifePath) + " operates in the world, master number depth if applicable", shadow: "1 sentence on the shadow/ego trap" },
-        expression: { number: formatNum(n.expression), title: "3-word destiny title",    reading: "2 sentences — natural talents encoded in the birth name, the outer destiny role" },
-        soulUrge:   { number: formatNum(n.soulUrge),   title: "3-word heart title",      reading: "2 sentences — the deepest inner craving, what this soul must feel to thrive" },
-        personality:{ number: formatNum(n.personality),title: "3-word mask title",       reading: "2 sentences — how the world perceives " + name + " before they speak, and how the Personality mask differs from the Soul Urge beneath it" },
-        birthday:   { number: formatNum(n.birthday),   title: "2-word gift title",       reading: "2 sentences — the innate special talent embedded in the day of birth per Phillips" },
-        maturity:   { number: formatNum(n.maturity),   title: "3-word future title",     reading: "2 sentences — the Maturity Number " + formatNum(n.maturity) + " is the soul's destination, the number that grows more dominant after age 35-40. What is " + name + " growing into?" },
-        timing:     { personalYear: n.personalYear,    reading: "2 sentences — what Personal Year " + n.personalYear + " is specifically calling " + name + " to do, build, or release right now in 2026" }
+        lifePath:    { number: formatNum(n.lifePath),    title: "3-word soul-level title", reading: "3 rich sentences on soul mission and Life Path " + formatNum(n.lifePath) + " gifts. Include master number depth.", shadow: "1 sentence on the shadow/ego trap" },
+        expression:  { number: formatNum(n.expression),  title: "3-word destiny title",    reading: "2 sentences on natural talents encoded in the birth name and the outer destiny role" },
+        soulUrge:    { number: formatNum(n.soulUrge),    title: "3-word heart title",      reading: "2 sentences on the deepest inner craving and what this soul must feel to thrive" },
+        personality: { number: formatNum(n.personality), title: "3-word mask title",       reading: "2 sentences on how the world perceives " + name + " before they speak, and how Personality " + formatNum(n.personality) + " differs from the Soul Urge beneath it" },
+        birthday:    { number: formatNum(n.birthday),    title: "2-word gift title",       reading: "2 sentences on the innate special talent embedded in Birthday Number " + formatNum(n.birthday) + " per Phillips" },
+        maturity:    { number: formatNum(n.maturity),    title: "3-word future title",     reading: "2 sentences on Maturity Number " + formatNum(n.maturity) + " — the soul destination that becomes dominant after age 35-40 and what " + name + " is growing into" },
+        timing:      { personalYear: n.personalYear,     reading: "2 sentences on what Personal Year " + n.personalYear + " is specifically calling " + name + " to do, build, or release right now" }
       },
       chineseZodiac: {
         yearAnimal:   n.chinese.element + " " + n.chinese.animal,
         innerAnimal:  n.chinese.innerAnimal,
         secretAnimal: n.chinese.secretAnimal,
-        reading: "3 sentences — the three-animal portrait: how the Year Animal shapes the public self, Inner Animal the private nature, and Secret Animal the subconscious drive for " + name
+        reading: "3 sentences — the three-animal portrait for " + name + ": Year Animal public self, Inner Animal private nature, Secret Animal subconscious drive"
       },
-      soulMessage: "4 sentences written directly to " + name + ". Weave Life Path " + formatNum(n.lifePath) + ", Personal Year " + n.personalYear + ", and the Chinese Zodiac animal energy. End with one irreducible truth they can carry forever."
-    }));
+      soulMessage: "4 sentences written directly to " + name + ". Weave Life Path " + formatNum(n.lifePath) + ", Personal Year " + n.personalYear + ", and Chinese Zodiac. End with one irreducible truth they can carry forever."
+    };
+    lines.push(JSON.stringify(sparkSchema));
     return lines.join("\n");
   }
 
   lines.push("You are a master numerologist trained in David A. Phillips' Complete Book of Numerology, a Chinese metaphysics scholar, and a shadow integration guide.");
   lines.push("OUTPUT: Return ONLY a raw JSON object. No markdown, no backticks, no preamble. Start with { end with }. No newlines or literal line breaks inside string values. Use single quotes inside strings, never double quotes inside strings.");
   lines.push("");
-  lines.push("VERIFY: Life Path=" + formatNum(n.lifePath) + " | Expression=" + formatNum(n.expression) + " | Soul Urge=" + formatNum(n.soulUrge) + " | Personality=" + formatNum(n.personality) + " | Missing=" + (n.missing.join(",") || "none") + ". Do not recalculate or override.");
+  lines.push("⚠ LOCKED — copy these EXACTLY into every number field, do NOT recalculate: Life Path=" + formatNum(n.lifePath) + " | Expression=" + formatNum(n.expression) + " | Soul Urge=" + formatNum(n.soulUrge) + " | Personality=" + formatNum(n.personality) + " | Birthday=" + formatNum(n.birthday) + " | Maturity=" + formatNum(n.maturity) + " | Personal Year=" + n.personalYear + " | Missing=" + (n.missing.join(",") || "none"));
   lines.push("");
   lines.push("PERSON: " + name + " | DOB: " + p.bMonth+"/"+p.bDay+"/"+p.bYear + " | Born: " + [p.bCity,p.bState,p.bCountry].filter(Boolean).join(", "));
   lines.push("Full birth name: " + n.fullName);
@@ -342,7 +343,7 @@ function buildPrompt(p, tier) {
   let marriageLP = null;
   if (p.marriageMonth && p.marriageDay && p.marriageYear) {
     const mm = Number(p.marriageMonth), md = Number(p.marriageDay), my = Number(p.marriageYear);
-    marriageLP = numReduce(numReduce(mm,false) + numReduce(md,false) + numReduce(digitSum(my),false));
+    marriageLP = numReduce(numReduce(mm,false) + numReduce(md,false) + digitSum(my));
   }
 
   if (peopleData.length) {
