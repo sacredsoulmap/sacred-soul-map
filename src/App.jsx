@@ -279,83 +279,62 @@ function buildPrompt(p, tier) {
   const lines = [];
 
   if (tier === "soul-spark") {
-    // ARCHITECTURE: Instructions in prose. Schema is a BLANK TEMPLATE — AI fills every "" value.
-    // Numbers NEVER come from AI output — they come from calcNums() in ReadingView.
+    // APPROACH: AI writes labeled sections in plain text. We parse by section label.
+    // This eliminates all JSON confusion — AI just writes prose, we extract by header.
     const lp = formatNum(n.lifePath), ex = formatNum(n.expression), su = formatNum(n.soulUrge);
     const pe = formatNum(n.personality), bd = formatNum(n.birthday), mat = formatNum(n.maturity);
     const py = n.personalYear;
     const czYr = n.chinese.element + " " + n.chinese.animal;
     const czIn = n.chinese.innerAnimal, czSec = n.chinese.secretAnimal;
     const sun = n.sunSign || "";
-    lines.push("You are a master numerologist, astrologer, and Chinese metaphysics scholar. Write with depth, soul, and precision — not generic affirmations. Every sentence must be specific to THIS person's actual numbers.");
-    lines.push("OUTPUT: Return ONLY raw JSON. No markdown, no backticks, no preamble. Start with { end with }. NO newlines inside strings. Single quotes inside strings only.");
+
+    lines.push("You are a master numerologist, astrologer, and Chinese metaphysics scholar trained in David A. Phillips' Complete Book of Numerology.");
+    lines.push("Write a deeply personal reading for " + name + ". Every sentence must be specific to their actual numbers — not generic. Use Phillips' actual system.");
+    lines.push("OUTPUT FORMAT: Write your response as labeled sections. Start EACH section with the EXACT label shown below on its own line, followed immediately by your content.");
+    lines.push("Use this EXACT JSON structure in your response — replace every PLACEHOLDER with real reading content:");
     lines.push("");
     lines.push("PERSON: " + name + " | DOB: " + p.bMonth+"/"+p.bDay+"/"+p.bYear);
     lines.push("Birth name: " + n.fullName);
-    if (n.hasCurrent) lines.push("Current name: " + n.currentFull + " — factor this name-change energy shift into the reading");
+    if (n.hasCurrent) lines.push("Current name: " + n.currentFull + " — factor this name-change energy into the reading");
     lines.push("");
-    lines.push("=== BLUEPRINT ===");
-    lines.push("Life Path " + lp + (n.lifePath===33?" — 33/6 MASTER TEACHER: rarest master number. Planetary-scale nurturing. Must teach through lived wounds. Carries both 33 creativity and 6 responsibility simultaneously. The highest calling is love as a healing force for humanity — but cannot give what they have not first healed in themselves.":""));
-    lines.push("Expression " + ex + " — what the birth name encodes as natural talent and outer destiny role");
-    lines.push("Soul Urge " + su + " — the private inner hunger driving all decisions, often unrecognized");
-    lines.push("Personality " + pe + (n.personality===44?" — 44/8 EXTREMELY RARE double master: projects immense authority, material mastery, disciplined power. The world sees a fortress before seeing the person.":" — outer mask, first impression before speaking"));
-    lines.push("Birthday " + bd + " — one specific pre-loaded gift per Phillips");
-    lines.push("Maturity " + mat + " — soul destination, becomes dominant after age 35-40");
+    lines.push("BLUEPRINT:");
+    lines.push("Life Path " + lp + (n.lifePath===33?" = 33/6 MASTER TEACHER [rarest master number — planetary-scale healer/teacher. Must transform personal wounds into wisdom. Cannot give what hasn't been healed in themselves. Carries dual burden of 33 creative genius AND 6 unconditional love.]":n.lifePath===11?" = 11/2 MASTER INTUITIVE":n.lifePath===22?" = 22/4 MASTER BUILDER":""));
+    lines.push("Expression " + ex + " = natural talents encoded in birth name, outer destiny role");
+    lines.push("Soul Urge " + su + " = private inner hunger, what they need to feel fulfilled");
+    lines.push("Personality " + pe + (n.personality===44?" = 44/8 DOUBLE MASTER [extreme rarity — projects immense authority, material mastery, disciplined power. World sees a fortress.]":n.personality===33?" = 33/6 MASTER":n.personality===22?" = 22/4 MASTER":n.personality===11?" = 11/2 MASTER":"") + " = outer mask, first impression");
+    lines.push("Birthday " + bd + " = specific pre-loaded innate gift (Phillips)");
+    lines.push("Maturity " + mat + " = soul destination, dominant after age 35-40");
     lines.push("Personal Year " + py + " in 2026");
     lines.push("Chinese Zodiac: " + czYr + " (Year/Public) | " + czIn + " (Inner/Private) | " + czSec + " (Secret/Subconscious)");
     if (sun) lines.push("Sun Sign: " + sun);
     lines.push("");
-    lines.push("=== WRITING INSTRUCTIONS ===");
-    lines.push("Fill every empty string value below. Write from Phillips' actual system:");
-    lines.push("• lifePath.reading (4 sentences): WHY this soul chose this path, what it demands, what mastery looks like, the higher calling. Master numbers: include dual nature and weight of the calling.");
-    lines.push("• lifePath.shadow (2 sentences): the specific ego trap and lower expression when unconscious or under pressure.");
-    lines.push("• expression.reading (3 sentences): the specific talents encoded in the birth name, the role they are built to play, how it shows up naturally without effort.");
-    lines.push("• expression.shadow (1 sentence): what goes wrong when this Expression is blocked or unowned.");
-    lines.push("• soulUrge.reading (3 sentences): the private hunger — what they NEED to feel, what they secretly crave, how it drives decisions even when unnamed.");
-    lines.push("• soulUrge.shadow (1 sentence): what happens when this urge is chronically unmet.");
-    lines.push("• personality.reading (3 sentences): the impression created before a word is spoken, how the world reads them, the gap between outer mask and inner Soul Urge.");
-    lines.push("• personality.shadow (1 sentence): the misreading this number tends to attract.");
-    lines.push("• birthday.reading (3 sentences): ONE specific gift Phillips assigns this birthday, how it operates, how it serves the Life Path.");
-    lines.push("• birthday.shadow (1 sentence): the challenge bundled with this gift.");
-    lines.push("• maturity.reading (3 sentences): what they are growing INTO, how life is reorganizing to deliver this, what feels increasingly right after 35-40.");
-    lines.push("• maturity.shadow (1 sentence): the resistance as this Maturity energy asks for more space.");
-    lines.push("• timing.reading (3 sentences): what Personal Year " + py + " means in 2026 — the theme, what to build or release, the ONE thing this year demands.");
-    lines.push("• synthesis.reading (5 sentences): how all 6 numbers work as ONE SYSTEM — name the primary harmony, the primary tension, the dominant pattern, the core gift, the central soul challenge to resolve this lifetime.");
-    lines.push("• chineseZodiac.reading (4 sentences): full three-animal portrait — " + czYr + " public face, " + czIn + " true private nature, " + czSec + " subconscious drive, and how all three explain " + name + "'s apparent contradictions.");
-    lines.push("• chineseZodiac.elementalNature (3 sentences): the element " + n.chinese.element + " — what it means energetically, how it shapes personality, health tendencies, and how it interacts with this soul's numerology.");
-    lines.push("• chineseZodiac.lifeThemes (3 sentences): the major life themes, soul contracts, and karmic patterns the " + czYr + " carries across a lifetime per Chinese metaphysics.");
-    lines.push("• chineseZodiac.animalWisdom (3 sentences each): specific teachings for Inner Animal " + czIn + " and Secret Animal " + czSec + " — what each reveals that the Year Animal does not show.");
-    lines.push("• chineseZodiac.numerologyCrossReference (3 sentences): how the animal energy amplifies, mirrors, or creates tension with Life Path " + lp + ", Expression " + ex + ", and Soul Urge " + su + ".");
-    if (sun) {
-      lines.push("• sunSign.reading (3 sentences): " + sun + " Sun — core identity, life force expression, what lights this soul up. How " + sun + " energy interacts with Life Path " + lp + " and the Chinese Zodiac animals.");
-      lines.push("• sunSign.shadow (2 sentences): the shadow of " + sun + " — the lower expression and what it looks like when this sign operates from fear rather than power.");
-    }
-    lines.push("• soulMessage (6 sentences): Speak directly to " + name + ", soul to soul. Weave Life Path " + lp + ", synthesis, Personal Year " + py + ", Chinese Zodiac wisdom" + (sun ? ", and " + sun + " Sun" : "") + ". Acknowledge both the gift AND the weight. End with one irreducible truth — a soul anchor, not an affirmation.");
+    lines.push("Write the following JSON. Replace every string value with real content. DO NOT leave any string empty. All values must be filled:");
     lines.push("");
-    lines.push("=== JSON TEMPLATE — fill every empty string: ===");
-    const tpl = {
-      cosmicSnapshot: "",
+
+    // Now provide a JSON with descriptive placeholder strings that tell AI what to write
+    const schema = {
+      cosmicSnapshot: "WRITE: 3 vivid sentences — the soul mission of Life Path " + lp + ", what Personal Year " + py + " is asking right now, what this chapter means for " + name,
       numerology: {
-        lifePath:    { title: "", reading: "", shadow: "" },
-        expression:  { title: "", reading: "", shadow: "" },
-        soulUrge:    { title: "", reading: "", shadow: "" },
-        personality: { title: "", reading: "", shadow: "" },
-        birthday:    { title: "", reading: "", shadow: "" },
-        maturity:    { title: "", reading: "", shadow: "" },
-        timing:      { reading: "" },
-        synthesis:   { reading: "" }
+        lifePath:    { title: "WRITE: 3-word soul title for Life Path " + lp, reading: "WRITE: 4 deep sentences — WHY this soul chose Life Path " + lp + ", what it demands, what mastery looks like, the higher calling when fully lived" + (n.lifePath===33?" Include the dual nature of 33/6 — the master teacher who must heal themselves first":""), shadow: "WRITE: 2 sentences — the specific ego trap and lower expression of Life Path " + lp },
+        expression:  { title: "WRITE: 3-word destiny title for Expression " + ex, reading: "WRITE: 3 sentences — the specific talents encoded in " + name + "'s birth name, the type of work Expression " + ex + " is built for, how it shows up as natural ability", shadow: "WRITE: 1 sentence — what happens when Expression " + ex + " is blocked or unowned" },
+        soulUrge:    { title: "WRITE: 3-word heart title for Soul Urge " + su, reading: "WRITE: 3 sentences — the private hunger of Soul Urge " + su + ": what " + name + " must FEEL to thrive, what they secretly crave, how it drives choices even unnamed", shadow: "WRITE: 1 sentence — what happens when Soul Urge " + su + " is chronically unmet" },
+        personality: { title: "WRITE: 3-word mask title for Personality " + pe, reading: "WRITE: 3 sentences — the first impression Personality " + pe + " creates before a word is spoken, how the world reads and approaches " + name + ", the gap between this mask and the Soul Urge " + su + " beneath", shadow: "WRITE: 1 sentence — the misreading Personality " + pe + " tends to attract" },
+        birthday:    { title: "WRITE: 2-word gift title for Birthday " + bd, reading: "WRITE: 3 sentences — the ONE specific innate gift Phillips assigns Birthday " + bd + ", how it operates naturally in " + name + "'s life, how it serves the Life Path " + lp + " mission", shadow: "WRITE: 1 sentence — the challenge bundled with Birthday " + bd },
+        maturity:    { title: "WRITE: 3-word becoming title for Maturity " + mat, reading: "WRITE: 3 sentences — what " + name + " is growing INTO with Maturity " + mat + ", how life is reorganizing to deliver this, what feels increasingly right after 35-40", shadow: "WRITE: 1 sentence — the resistance as Maturity " + mat + " asks for more space" },
+        timing:      { reading: "WRITE: 3 sentences — what Personal Year " + py + " means in 2026 for " + name + ": the theme, what to build or release, the ONE thing this year demands" },
+        synthesis:   { reading: "WRITE: 5 sentences — how all 6 numbers work as ONE system for " + name + ": (1) the primary harmony between numbers, (2) the primary tension, (3) the dominant pattern, (4) the core gift, (5) the central soul challenge to resolve this lifetime. Numbers: " + lp + " + " + ex + " + " + su + " + " + pe + " + " + bd + " + " + mat }
       },
       chineseZodiac: {
-        reading: "",
-        elementalNature: "",
-        lifeThemes: "",
-        animalWisdom: "",
-        numerologyCrossReference: ""
+        reading: "WRITE: 4 sentences — how the " + czYr + " shapes " + name + "'s public face, how the Inner " + czIn + " reveals the true private nature, how the Secret " + czSec + " operates subconsciously, how all three explain the complexity of who " + name + " actually is",
+        elementalNature: "WRITE: 3 sentences — the element " + n.chinese.element + ": what it means energetically for " + name + ", how it shapes personality and emotional life, how it interacts with the numerology blueprint",
+        lifeThemes: "WRITE: 3 sentences — the major life themes, soul contracts, and karmic patterns the " + czYr + " carries per Chinese metaphysics",
+        animalWisdom: "WRITE: 3 sentences — what the Inner " + czIn + " reveals about " + name + "'s true private nature (2 sentences) and what the Secret " + czSec + " drives at the subconscious level (1 sentence)",
+        numerologyCrossReference: "WRITE: 3 sentences — how the animal energy mirrors or tensions Life Path " + lp + ", Expression " + ex + ", and Soul Urge " + su + " — show they are all describing the same soul from different angles"
       },
-      sunSign: sun ? { sign: sun, reading: "", shadow: "" } : null,
-      soulMessage: ""
+      sunSign: sun ? { sign: sun, reading: "WRITE: 3 sentences — " + sun + " Sun core identity and life force for " + name + ", how " + sun + " amplifies or tensions the Life Path " + lp + " mission", shadow: "WRITE: 2 sentences — the shadow of " + sun + ": lower expression and what it looks like when operating from fear" } : null,
+      soulMessage: "WRITE: 6 sentences directly to " + name + ", soul to soul. Weave Life Path " + lp + ", synthesis pattern, Personal Year " + py + ", Chinese Zodiac" + (sun?", and " + sun + " Sun":"") + ". Acknowledge both the gift AND the weight. End with one irreducible truth — not an affirmation but a soul anchor."
     };
-    lines.push(JSON.stringify(tpl));
+    lines.push(JSON.stringify(schema, null, 0));
     return lines.join("\n");
   }
 
@@ -557,7 +536,7 @@ async function generateReading(p, tier, onProgress) {
     body: JSON.stringify({
       model: "claude-sonnet-4-20250514",
       max_tokens: 16000,
-      system: "You are a sacred numerology and astrology reading generator. OUTPUT FORMAT: You must respond with ONLY a raw JSON object. NO markdown. NO backticks. NO explanations. NO preamble. Your ENTIRE response must be valid JSON starting with { and ending with }. CONTENT RULES: (1) Every field must contain real reading content. (2) Never use double-quotes inside string values — use single quotes or rephrase. (3) Never add line breaks inside string values. (4) Do not recalculate or override the exact numbers provided.",
+      system: "You are a sacred numerology and astrology reading generator. OUTPUT FORMAT: Return ONLY a raw JSON object. NO markdown fences, NO backticks, NO explanations. Start with { end with }. CRITICAL RULE: Every string value that begins with 'WRITE:' must be replaced with real reading content as described. NEVER return a string still containing 'WRITE:'. CONTENT RULES: (1) Every field must contain real, deep, specific reading content. (2) Use single quotes inside strings, never double-quotes. (3) No literal newlines or line breaks inside string values. (4) Do not recalculate or override the exact numbers provided.",
       messages: [{ role: "user", content: prompt }, { role: "assistant", content: "{" }]
     })
   });
@@ -611,11 +590,20 @@ async function generateReading(p, tier, onProgress) {
     return JSON.parse(f);
   };
 
-  // Attempt 1: direct parse
-  try { return tryParse(clean); } catch {}
+  // Scrub any leftover WRITE: placeholders (AI failed to fill that field)
+  const scrub = obj => {
+    if (!obj || typeof obj !== "object") return obj;
+    for (const k of Object.keys(obj)) {
+      if (typeof obj[k] === "string" && obj[k].startsWith("WRITE:")) obj[k] = "";
+      else if (typeof obj[k] === "object") scrub(obj[k]);
+    }
+    return obj;
+  };
 
-  // Attempt 2: auto-close truncated JSON
-  // Walk the string tracking open structures, then close them all
+  // Attempt 1: direct parse
+  try { return scrub(tryParse(clean)); } catch {}
+
+  // Attempt 2: auto-close truncated JSON — walk string tracking open structures, then close them all
   try {
     const closeJSON = str => {
       const stack = [];
@@ -636,12 +624,10 @@ async function generateReading(p, tier, onProgress) {
       }
       // If we're inside a string, cut back to last completed value
       let truncated = inStr ? str.slice(0, lastGoodIdx + 1) : str;
-      // Remove trailing partial key or comma
       truncated = truncated.replace(/,\s*"[^"]*$/, "").replace(/,\s*$/, "");
-      // Close all open structures
       return truncated + stack.reverse().join("");
     };
-    return tryParse(closeJSON(clean));
+    return scrub(tryParse(closeJSON(clean)));
   } catch {}
 
   // Attempt 3: regex-extract every completed top-level field
@@ -652,7 +638,7 @@ async function generateReading(p, tier, onProgress) {
     while ((m = fieldRe.exec(clean)) !== null) {
       try { partial[m[1]] = JSON.parse(m[2]); } catch { partial[m[1]] = m[2].replace(/^"|"$/g, ""); }
     }
-    if (Object.keys(partial).length > 2) return partial;
+    if (Object.keys(partial).length > 2) return scrub(partial);
   } catch {}
 
   // Attempt 4: minimum rescue
@@ -662,7 +648,7 @@ async function generateReading(p, tier, onProgress) {
     if (snap) partial.cosmicSnapshot = snap[1];
     const msg = clean.match(/"soulMessage"\s*:\s*"((?:[^"\\]|\\.)*)"/);
     if (msg) partial.soulMessage = msg[1];
-    if (Object.keys(partial).length > 0) { partial._partial = true; return partial; }
+    if (Object.keys(partial).length > 0) { partial._partial = true; return scrub(partial); }
   } catch {}
 
   throw new Error("Reading complete but JSON failed. Please try again.");
