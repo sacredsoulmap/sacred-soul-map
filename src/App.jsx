@@ -1161,7 +1161,11 @@ export default function App() {
     const iv = setInterval(() => { mi = (mi+1) % msgs.length; setGenMsg(msgs[mi]); }, 2800);
     try {
       const r = await generateReading(person, tierId, count => setStreamChars(count));
-      clearInterval(iv); setReading(r); setStep("results");
+      clearInterval(iv); 
+      console.log("READING RECEIVED:", JSON.stringify(r, null, 2));
+      console.log("NUMEROLOGY KEYS:", r.numerology ? Object.keys(r.numerology) : "NO NUMEROLOGY KEY");
+      console.log("LIFE PATH DATA:", r.numerology?.lifePath);
+      setReading(r); setStep("results");
       window.scrollTo({ top:0, behavior:"smooth" });
     } catch (e) {
       clearInterval(iv); setErr("Generation failed: " + e.message); setStep("form");
